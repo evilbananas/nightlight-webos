@@ -30,8 +30,9 @@ or through Homebrew Channel.
 ### First run
 
 1. Open NightLight on the TV.
-2. Under System, next to Root access, press Grant. This runs Homebrew Channel's `elevate-service` for
-   `org.nightlightos.app.service` and restarts the service as root.
+2. Press Grant root access, below the Turn on now and Turn off now buttons. This runs Homebrew Channel's
+   `elevate-service` for `org.nightlightos.app.service` and restarts the service as root. The button goes away once
+   the service is running as root.
 3. Once it runs as root, the service writes a boot script to
    `/var/lib/webosbrew/init.d/org-nightlightos-app-service` so the schedule keeps working after a reboot without
    opening the app. You can turn this off with the "Start at boot" setting.

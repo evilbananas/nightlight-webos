@@ -30,6 +30,7 @@
           <dt>Turns on</dt><dd id="onAt">—</dd>
           <dt>Turns off</dt><dd id="offAt">—</dd>
           <dt>Location</dt><dd id="locationText">—</dd>
+          <dt>Root access</dt><dd id="rootText">—</dd>
         </dl>
 
         <div id="alerts"></div>
@@ -37,6 +38,9 @@
         <div class="nav-row buttons">
           <button class="focusable btn" data-action="turn-on">Turn on now</button>
           <button class="focusable btn" data-action="turn-off">Turn off now</button>
+        </div>
+        <div class="nav-row buttons grant-row" id="grantRow">
+          <button class="focusable btn" id="elevateBtn" data-action="elevate">Grant root access</button>
         </div>
       </section>
 
@@ -103,11 +107,6 @@
           <div class="focusable seg" data-key="autostart">
             <span data-value="true">On</span><span data-value="false">Off</span>
           </div>
-        </div>
-        <div class="nav-row setting">
-          <span class="label">Root access</span>
-          <span id="rootText" class="value-text">—</span>
-          <button class="focusable btn" id="elevateBtn" data-action="elevate">Grant</button>
         </div>
       </section>
     </main>

@@ -103,7 +103,7 @@
     $('version').textContent = 'v' + status.version;
 
     if (!status.elevated) {
-      alerts.push({ text: 'The service is not running as root. The TV may block it from changing picture settings, and it won\'t start at boot. Press Grant next to Root access below (needs Homebrew Channel on a rooted TV).' });
+      alerts.push({ text: 'Not running as root, so the TV may block changes and the schedule won\'t start at boot. Needs Homebrew Channel on a rooted TV.' });
     }
     if (status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
     var la = status.eyeComfort.lastApply;
@@ -159,9 +159,9 @@
 
     if (status) {
       $('rootText').textContent = status.elevated
-        ? 'Granted' + (status.autostartInstalled ? ' · boot script installed' : '')
+        ? 'Granted' + (status.autostartInstalled ? ', starts at boot' : '')
         : 'Not granted';
-      $('elevateBtn').classList.toggle('hidden', !!status.elevated);
+      $('grantRow').classList.toggle('hidden', !!status.elevated);
     }
     Nav.ensureFocus();
   }
@@ -296,7 +296,7 @@
     Luna.call(HBCHANNEL_EXEC, { command: ELEVATE + ' ' + SERVICE_ID }, function (res) {
       if (!res.returnValue) {
         btn.disabled = false;
-        btn.textContent = 'Grant';
+        btn.textContent = 'Grant root access';
         toast('Homebrew Channel is required: ' + (res.errorText || res.stderrString || 'exec failed'));
         return;
       }
@@ -304,7 +304,7 @@
       Luna.call(SERVICE + 'restart', {}, function () {
         setTimeout(function () {
           btn.disabled = false;
-          btn.textContent = 'Grant';
+          btn.textContent = 'Grant root access';
           refresh();
           toast('Root access granted');
         }, 1500);
