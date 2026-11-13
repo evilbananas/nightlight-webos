@@ -1,0 +1,21 @@
+{
+  "name": "nightlight-webos",
+  "version": "0.1.0",
+  "description": "webOS homebrew app that schedules LG Eye Comfort Mode (blue light reduction) by sunrise/sunset or fixed times",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evilbananas/nightlight-webos.git"
+  },
+  "scripts": {
+    "test": "node --test",
+    "icons": "node tools/make-icons.js",
+    "package": "ares-package app service -o dist",
+    "deploy": "ares-install dist/org.nightlightos.app_0.1.0_all.ipk",
+    "launch": "ares-launch org.nightlightos.app"
+  },
+  "devDependencies": {
+    "@webos-tools/cli": "^3.1.0"
+  }
+}

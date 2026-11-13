@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NightLight</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="#ffb347"/>
+        <circle cx="44" cy="22" r="24" fill="#14111f"/>
+      </svg>
+      <h1>NightLight</h1>
+      <span class="sub">Eye Comfort scheduler</span>
+      <span id="version" class="version"></span>
+    </header>
+
+    <main>
+      <section class="card status-card">
+        <div class="state-label">Eye Comfort Mode</div>
+        <div id="state" class="state">—</div>
+        <div id="next" class="next">Connecting to service…</div>
+
+        <dl class="facts">
+          <dt>Local time</dt><dd id="localTime">—</dd>
+          <dt id="riseLabel">Sunrise</dt><dd id="sunrise">—</dd>
+          <dt id="setLabel">Sunset</dt><dd id="sunset">—</dd>
+          <dt>Turns on</dt><dd id="onAt">—</dd>
+          <dt>Turns off</dt><dd id="offAt">—</dd>
+          <dt>Location</dt><dd id="locationText">—</dd>
+        </dl>
+
+        <div id="alerts"></div>
+
+        <div class="nav-row buttons">
+          <button class="focusable btn" data-action="turn-on">Turn on now</button>
+          <button class="focusable btn" data-action="turn-off">Turn off now</button>
+        </div>
+      </section>
+
+      <section class="card settings-card" id="settings">
+        <h2>Schedule</h2>
+        <div class="nav-row setting">
+          <span class="label">Scheduler</span>
+          <div class="focusable seg" data-key="enabled">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <span class="label">Mode</span>
+          <div class="focusable seg" data-key="mode">
+            <span data-value="sun">Sunset to sunrise</span><span data-value="manual">Custom times</span>
+          </div>
+        </div>
+        <div class="nav-row setting mode-sun">
+          <span class="label">Turn on</span>
+          <div class="focusable stepper" data-key="sunsetOffset" data-kind="offset" data-event="sunset" data-step="5" data-min="-240" data-max="240">
+            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+          </div>
+        </div>
+        <div class="nav-row setting mode-sun">
+          <span class="label">Turn off</span>
+          <div class="focusable stepper" data-key="sunriseOffset" data-kind="offset" data-event="sunrise" data-step="5" data-min="-240" data-max="240">
+            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+          </div>
+        </div>
+        <div class="nav-row setting mode-manual">
+          <span class="label">Turn on at</span>
+          <div class="focusable stepper" data-key="manualStart" data-kind="time" data-step="15">
+            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+          </div>
+        </div>
+        <div class="nav-row setting mode-manual">
+          <span class="label">Turn off at</span>
+          <div class="focusable stepper" data-key="manualEnd" data-kind="time" data-step="15">
+            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+          </div>
+        </div>
+
+        <h2>Location</h2>
+        <div class="nav-row setting">
+          <span class="label">Source</span>
+          <div class="focusable seg" data-key="locationSource">
+            <span data-value="tv">TV timezone</span><span data-value="manual">Manual</span>
+          </div>
+        </div>
+        <div class="nav-row setting loc-tv">
+          <span class="label">From timezone</span>
+          <span id="tzLocationText" class="value-text">—</span>
+        </div>
+        <div class="nav-row setting coords loc-manual">
+          <span class="label">Coordinates</span>
+          <input class="focusable input" id="lat" type="text" placeholder="Latitude" maxlength="12">
+          <input class="focusable input" id="lon" type="text" placeholder="Longitude" maxlength="12">
+          <button class="focusable btn" data-action="save-coords">Use</button>
+        </div>
+
+        <h2>System</h2>
+        <div class="nav-row setting">
+          <span class="label">Start at boot</span>
+          <div class="focusable seg" data-key="autostart">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <span class="label">Root access</span>
+          <span id="rootText" class="value-text">—</span>
+          <button class="focusable btn" id="elevateBtn" data-action="elevate">Grant</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span><b>▲▼</b> Navigate</span><span><b>◀▶</b> Change</span><span><b>OK</b> Select</span><span><b>BACK</b> Exit</span>
+      <span id="toast" class="toast"></span>
+    </footer>
+  </div>
+
+  <script src="js/mock.js"></script>
+  <script src="js/luna.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
