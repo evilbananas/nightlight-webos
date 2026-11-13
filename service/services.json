@@ -1,9 +1,9 @@
 {
-  "id": "org.nightlightos.app.service",
-  "description": "NightLight OS Eye Comfort scheduler",
+  "id": "org.nightlightwebos.app.service",
+  "description": "NightLight Eye Comfort scheduler",
   "services": [
     {
-      "name": "org.nightlightos.app.service"
+      "name": "org.nightlightwebos.app.service"
     }
   ]
 }

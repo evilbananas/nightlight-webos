@@ -14,7 +14,7 @@
     "package": "ares-package app service -o dist",
     "set-version": "node tools/set-version.js",
     "deploy": "node -e \"const a = require('./app/appinfo.json'); require('child_process').execSync('ares-install dist/' + a.id + '_' + a.version + '_all.ipk', { stdio: 'inherit' })\"",
-    "launch": "ares-launch org.nightlightos.app"
+    "launch": "ares-launch org.nightlightwebos.app"
   },
   "devDependencies": {
     "@webos-tools/cli": "^3.1.0"

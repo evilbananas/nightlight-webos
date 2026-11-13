@@ -14,7 +14,7 @@ function script(serviceId) {
   var file = scriptPath(serviceId);
   return [
     '#!/bin/sh',
-    '# Installed by NightLight OS: starts the Eye Comfort scheduler at boot.',
+    '# Installed by NightLight: starts the Eye Comfort scheduler at boot.',
     'SERVICE=' + serviceId,
     'output=$(luna-send -n 1 "luna://$SERVICE/start" \'{}\')',
     '',

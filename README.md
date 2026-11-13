@@ -26,7 +26,7 @@ First run).
 ```sh
 npm install
 npm test            # unit tests for the sun/schedule/controller logic
-npm run package     # creates dist/org.nightlightos.app_<version>_all.ipk
+npm run package     # creates dist/org.nightlightwebos.app_<version>_all.ipk
 ```
 
 You can install the `.ipk` with `ares-install` (`npm run deploy`, after setting the TV up with `ares-setup-device`).
@@ -46,10 +46,10 @@ Pushing the tag runs the Release workflow (`.github/workflows/release.yml`), whi
 ### First run
 
 1. Open NightLight on the TV once. If the service isn't running as root yet, the app asks Homebrew Channel to run
-   `elevate-service` for `org.nightlightos.app.service` and restarts the service. This happens in the background;
+   `elevate-service` for `org.nightlightwebos.app.service` and restarts the service. This happens in the background;
    there is nothing to confirm on the TV. The app only shows a message if it fails.
 2. Once it runs as root, the service writes a boot script to
-   `/var/lib/webosbrew/init.d/org-nightlightos-app-service` so the schedule keeps working after a reboot without
+   `/var/lib/webosbrew/init.d/org-nightlightwebos-app-service` so the schedule keeps working after a reboot without
    opening the app. You can turn this off with the "Start at boot" setting.
 
 At boot the script waits for the Luna bus to come up, then starts the service. Reinstalling or updating the app
@@ -59,12 +59,12 @@ again. If the app has been uninstalled, the script deletes itself.
 ### Installing over SSH
 
 ```sh
-scp dist/org.nightlightos.app_<version>_all.ipk root@TV_IP:/tmp/nightlight.ipk
+scp dist/org.nightlightwebos.app_<version>_all.ipk root@TV_IP:/tmp/nightlight.ipk
 ssh root@TV_IP 'luna-send -i -f luna://com.webos.appInstallService/dev/install \
   "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/nightlight.ipk\",\"subscribe\":true}"'
 # wait for "installed", then Ctrl+C. To elevate without opening the app:
-ssh root@TV_IP '/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service org.nightlightos.app.service \
-  && luna-send -n 1 luna://org.nightlightos.app.service/start "{}"'
+ssh root@TV_IP '/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service org.nightlightwebos.app.service \
+  && luna-send -n 1 luna://org.nightlightwebos.app.service/start "{}"'
 ```
 
 Tested on webOS 10.3.1 (Node 16).
@@ -99,7 +99,7 @@ you change settings. If you turn Eye Comfort Mode on or off yourself, from the T
 Time and timezone come from `com.palm.systemservice/time/getSystemTime`, so daylight saving and timezone changes on
 the TV are picked up without restarting anything.
 
-Settings are saved to `/home/root/.config/nightlight-os/config.json`, or to the service directory if the service
+Settings are saved to `/home/root/.config/nightlight-webos/config.json`, or to the service directory if the service
 isn't running as root.
 
 ### Service API
@@ -112,7 +112,7 @@ isn't running as root.
 | `start` | `{}` | Starts the service (used by the boot script) |
 | `restart` | `{}` | Exits the service; the next call starts it again |
 
-Example: `luna-send -n 1 luna://org.nightlightos.app.service/getStatus '{}'`
+Example: `luna-send -n 1 luna://org.nightlightwebos.app.service/getStatus '{}'`
 
 ## Troubleshooting
 

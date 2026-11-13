@@ -1,7 +1,7 @@
 {
-  "name": "org.nightlightos.app.service",
+  "name": "org.nightlightwebos.app.service",
   "version": "0.1.0",
-  "description": "NightLight OS background scheduler for LG webOS Eye Comfort Mode",
+  "description": "NightLight background scheduler for LG webOS Eye Comfort Mode",
   "main": "service.js",
   "private": true
 }

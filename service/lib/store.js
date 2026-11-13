@@ -3,7 +3,7 @@ var fs = require('fs');
 var path = require('path');
 
 // Prefer a location outside the app directory so settings survive app updates.
-var CANDIDATE_DIRS = ['/home/root/.config/nightlight-os', path.join(__dirname, '..', 'data')];
+var CANDIDATE_DIRS = ['/home/root/.config/nightlight-webos', path.join(__dirname, '..', 'data')];
 
 function mkdirp(dir) {
   if (fs.existsSync(dir)) return;

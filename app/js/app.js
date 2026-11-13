@@ -1,5 +1,5 @@
 (function () {
-  var SERVICE_ID = 'org.nightlightos.app.service';
+  var SERVICE_ID = 'org.nightlightwebos.app.service';
   var SERVICE = 'luna://' + SERVICE_ID + '/';
   var HBCHANNEL_EXEC = 'luna://org.webosbrew.hbchannel.service/exec';
   var ELEVATE = '/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service';
