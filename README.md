@@ -17,15 +17,27 @@ switch Location to Manual in the app and enter your latitude and longitude for b
 
 ## Installing
 
+### Homebrew Channel
+
+1. In Homebrew Channel, open **Settings** and add this URL as an extra repository:
+
+   ```text
+   https://raw.githubusercontent.com/evilbananas/nightlight-webos/gh-pages/repo.json
+   ```
+
+2. Go back to the app list, select **NightLight**, and install it. Updates show up there too.
+
+### Manual install
+
 Download the latest `.ipk` file from the [Releases](https://github.com/evilbananas/nightlight-webos/releases) page,
 then install it using one of the methods below.
 
-### Device Manager app
+#### Device Manager app
 
 1. Install [webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop) on your computer and add your TV.
 2. Open the **Apps** tab, click **Install**, and select the downloaded `.ipk` file.
 
-### webOS TV CLI tools
+#### webOS TV CLI tools
 
 1. Install the [webOS TV CLI](https://webostv.developer.lge.com/develop/tools/cli-installation) and register your TV
    with `ares-setup-device`.

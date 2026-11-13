@@ -38,3 +38,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" dist/*.ipk --title "$GITHUB_REF_NAME" --generate-notes
+
+      # Homebrew Channel reads repo.json from the gh-pages branch, which is rebuilt from scratch on every release.
+      - name: Publish the Homebrew Channel repo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir site
+          node tools/make-repo.js dist/*.ipk "$GITHUB_REF_NAME" site/repo.json
+          cp app/icon.png site/
+          cd site
+          git init -q -b gh-pages
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -m "Homebrew Channel repo for $GITHUB_REF_NAME"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
