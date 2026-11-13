@@ -94,8 +94,6 @@ h2:first-child { margin-top: 0; }
 .buttons { display: -webkit-flex; display: flex; }
 .buttons .btn { -webkit-flex: 1; flex: 1; }
 .buttons .btn + .btn { margin-left: 1rem; }
-.grant-row { margin-top: 0.8rem; }
-.grant-row .btn { background: rgba(255, 179, 71, 0.22); }
 
 .focusable {
   border: 0.18rem solid transparent;

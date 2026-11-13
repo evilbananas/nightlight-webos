@@ -2,18 +2,17 @@
 
 Homebrew app for rooted LG TVs that turns Eye Comfort Mode (LG's blue light filter) on in the evening and off in
 the morning. It can follow sunset and sunrise, optionally shifted by a number of minutes, or use fixed on and off
-times. Fixed times can cross midnight, e.g. 21:00 to 07:00.
+times.
 
-For sunset and sunrise it needs a rough location. TVs don't have one, so it uses the TV's timezone setting instead:
-the TV ships the standard tz database, and `/usr/share/zoneinfo/zone.tab` lists coordinates for each timezone's main
-city. For `Europe/Copenhagen` that is Copenhagen. In Denmark this puts the times within about 15 to 20 minutes of
-where you actually are. Timezones that cover a lot of ground, like `Asia/Shanghai` or `America/Chicago`, can be off
-by much more. If that's you, switch Location to Manual in the app and type in your latitude and longitude.
+It works out sunrise and sunset from the TV's timezone setting. The TV ships the standard tz database, and
+`/usr/share/zoneinfo/zone.tab` lists coordinates for each timezone's main city. Since a timezone can cover a large
+area, you can switch Location to Manual in the app and enter your latitude and longitude for better accuracy.
 
 ## Requirements
 
-- A rooted LG webOS TV with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). Without root
-  the TV won't let a third-party app change picture settings, and it kills background services.
+- A rooted LG webOS TV with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). Root is what
+  lets the scheduler start by itself when the TV boots. On webOS 10.3.1 the service could change the setting without
+  root; older firmware may be stricter.
 - Node.js 18 or newer on your computer to build the package and run the tests.
 
 ## Building
@@ -29,11 +28,10 @@ or through Homebrew Channel.
 
 ### First run
 
-1. Open NightLight on the TV.
-2. Press Grant root access, below the Turn on now and Turn off now buttons. This runs Homebrew Channel's
-   `elevate-service` for `org.nightlightos.app.service` and restarts the service as root. The button goes away once
-   the service is running as root.
-3. Once it runs as root, the service writes a boot script to
+1. Open NightLight on the TV once. If the service isn't running as root yet, the app asks Homebrew Channel to run
+   `elevate-service` for `org.nightlightos.app.service` and restarts the service. This happens in the background;
+   there is nothing to confirm on the TV. The app only shows a message if it fails.
+2. Once it runs as root, the service writes a boot script to
    `/var/lib/webosbrew/init.d/org-nightlightos-app-service` so the schedule keeps working after a reboot without
    opening the app. You can turn this off with the "Start at boot" setting.
 
@@ -99,8 +97,7 @@ Example: `luna-send -n 1 luna://org.nightlightos.app.service/getStatus '{}'`
 
 ## Troubleshooting
 
-If the app says it could not change Eye Comfort Mode, check that root access is granted, then check that your model
-has the setting:
+If the app says it could not change Eye Comfort Mode, check that your model has the setting:
 
 ```sh
 luna-send -n 1 luna://com.webos.settingsservice/getSystemSettings '{"category":"picture","keys":["eyeComfortMode"]}'

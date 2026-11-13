@@ -16,6 +16,8 @@
   var renderedLocation = null;
   // Manual location picked in the UI but no coordinates saved yet (saved on "Use").
   var manualDraft = false;
+  var elevateState = 'idle'; // 'idle' | 'running' | 'done' | 'failed'
+  var elevateError = null;
 
   function $(id) { return document.getElementById(id); }
   function qsa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -102,8 +104,8 @@
     $('locationText').textContent = locationText(status.location);
     $('version').textContent = 'v' + status.version;
 
-    if (!status.elevated) {
-      alerts.push({ text: 'Not running as root, so the TV may block changes and the schedule won\'t start at boot. Needs Homebrew Channel on a rooted TV.' });
+    if (!status.elevated && elevateState === 'failed') {
+      alerts.push({ text: 'Could not get root access through Homebrew Channel (' + elevateError + '). The schedule works while the TV is on, but it won\'t start again after a reboot until you open this app.' });
     }
     if (status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
     var la = status.eyeComfort.lastApply;
@@ -159,9 +161,8 @@
 
     if (status) {
       $('rootText').textContent = status.elevated
-        ? 'Granted' + (status.autostartInstalled ? ', starts at boot' : '')
-        : 'Not granted';
-      $('grantRow').classList.toggle('hidden', !!status.elevated);
+        ? 'Yes' + (status.autostartInstalled ? ', starts at boot' : '')
+        : elevateState === 'running' ? 'Requesting…' : 'No';
     }
     Nav.ensureFocus();
   }
@@ -182,6 +183,7 @@
     }
     serviceError = null;
     status = res;
+    if (!res.elevated && elevateState === 'idle') elevate();
     if (!hasPending() && !saving) {
       draft = clone(res.config);
       if (manualDraft) draft.locationSource = 'manual';
@@ -290,23 +292,22 @@
     save();
   }
 
-  function elevate(btn) {
-    btn.disabled = true;
-    btn.textContent = 'Granting…';
+  // Requests root for the service through Homebrew Channel, once per app launch, the
+  // same way other homebrew apps do. Nothing is shown on the TV unless it fails.
+  function elevate() {
+    elevateState = 'running';
     Luna.call(HBCHANNEL_EXEC, { command: ELEVATE + ' ' + SERVICE_ID }, function (res) {
       if (!res.returnValue) {
-        btn.disabled = false;
-        btn.textContent = 'Grant root access';
-        toast('Homebrew Channel is required: ' + (res.errorText || res.stderrString || 'exec failed'));
+        elevateState = 'failed';
+        elevateError = res.errorText || res.stderrString || 'exec failed';
+        render();
         return;
       }
       // Restart the service so it relaunches with root privileges.
       Luna.call(SERVICE + 'restart', {}, function () {
         setTimeout(function () {
-          btn.disabled = false;
-          btn.textContent = 'Grant root access';
+          elevateState = 'done';
           refresh();
-          toast('Root access granted');
         }, 1500);
       });
     });
@@ -326,7 +327,6 @@
       case 'turn-on': setEyeComfort(true); break;
       case 'turn-off': setEyeComfort(false); break;
       case 'save-coords': saveCoords(); break;
-      case 'elevate': elevate(el); break;
     }
   }
 
