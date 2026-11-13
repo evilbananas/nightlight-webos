@@ -1,4 +1,7 @@
 'use strict';
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const test = require('node:test');
 const assert = require('node:assert');
 const { getSunTimes } = require('../service/lib/sun');
@@ -12,8 +15,8 @@ const near = (actual, expectedIso, toleranceMin = 3) => {
   assert.ok(diff <= toleranceMin, `${new Date(actual).toISOString()} not within ${toleranceMin} min of ${expectedIso}`);
 };
 
-const LONDON = { latitude: 51.5074, longitude: -0.1278, source: 'manual' };
-const TROMSO = { latitude: 69.6492, longitude: 18.9553, source: 'manual' };
+const LONDON = { latitude: 51.5074, longitude: -0.1278 };
+const TROMSO = { latitude: 69.6492, longitude: 18.9553 };
 
 test('sun times: London summer solstice', () => {
   const t = getSunTimes(Date.parse('2024-06-21T12:00:00Z'), LONDON.latitude, LONDON.longitude);
@@ -171,15 +174,17 @@ test('controller uses the TV timezone location, and manual coordinates override 
   assert.match(c.lastEval.error, /Etc\/UTC/);
 });
 
-test('controller migrates configs that used IP geolocation', () => {
-  const stored = {
-    autoLocation: true,
-    location: { latitude: 55.47, longitude: 8.45, label: 'Esbjerg, DK', source: 'ip' }
-  };
-  let saved = null;
-  const c = new Controller({ store: { load: () => stored, save: (d) => { saved = d; } }, luna: { call: () => {} } });
-  assert.strictEqual(c.config.locationSource, 'tv');
-  assert.strictEqual(c.config.location, null);
-  assert.strictEqual('autoLocation' in c.config, false);
-  assert.deepStrictEqual(saved, c.config);
+test('timezone location: reads zone.tab first, then zone1970.tab, skipping missing files', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nightlight-tz-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const zoneTab = path.join(dir, 'zone.tab');
+  const zone1970 = path.join(dir, 'zone1970.tab');
+  fs.writeFileSync(zoneTab, 'DK\t+5540+01235\tEurope/Copenhagen\n');
+  // Made-up conflicting entry, to check which file wins when both list a zone.
+  fs.writeFileSync(zone1970, 'DE,DK\t+5230+01322\tEurope/Copenhagen\nUS\t+404251-0740023\tAmerica/New_York\n');
+  const files = [path.join(dir, 'missing.tab'), zoneTab, zone1970];
+
+  assert.strictEqual(tzlocation.resolve('Europe/Copenhagen', files).label, 'Copenhagen, DK');
+  assert.strictEqual(tzlocation.resolve('America/New_York', files).label, 'New York, US');
+  assert.strictEqual(tzlocation.resolve('Etc/UTC', files), null);
 });

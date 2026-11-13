@@ -15,16 +15,33 @@ area, you can switch Location to Manual in the app and enter your latitude and l
   root; older firmware may be stricter.
 - Node.js 18 or newer on your computer to build the package and run the tests.
 
+## Installing
+
+Download the `.ipk` from the [Releases](https://github.com/evilbananas/nightlight-webos/releases) page, or build it
+yourself (see Building). Install it with `ares-install` or over SSH (see Installing over SSH), then open it once (see
+First run).
+
 ## Building
 
 ```sh
 npm install
 npm test            # unit tests for the sun/schedule/controller logic
-npm run package     # creates dist/org.nightlightos.app_0.1.0_all.ipk
+npm run package     # creates dist/org.nightlightos.app_<version>_all.ipk
 ```
 
-You can install the `.ipk` with `ares-install` (`npm run deploy`, after setting the TV up with `ares-setup-device`)
-or through Homebrew Channel.
+You can install the `.ipk` with `ares-install` (`npm run deploy`, after setting the TV up with `ares-setup-device`).
+
+### Releasing a new version
+
+```sh
+npm run set-version -- 0.2.0   # updates app/appinfo.json and both package.json files
+git commit -am "Release 0.2.0"
+git tag v0.2.0
+git push origin main v0.2.0
+```
+
+Pushing the tag runs the Release workflow (`.github/workflows/release.yml`), which runs the tests, builds the
+`.ipk` and publishes it as a GitHub release.
 
 ### First run
 
@@ -42,7 +59,7 @@ again. If the app has been uninstalled, the script deletes itself.
 ### Installing over SSH
 
 ```sh
-scp dist/org.nightlightos.app_0.1.0_all.ipk root@TV_IP:/tmp/nightlight.ipk
+scp dist/org.nightlightos.app_<version>_all.ipk root@TV_IP:/tmp/nightlight.ipk
 ssh root@TV_IP 'luna-send -i -f luna://com.webos.appInstallService/dev/install \
   "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/nightlight.ipk\",\"subscribe\":true}"'
 # wait for "installed", then Ctrl+C. To elevate without opening the app:
@@ -64,6 +81,8 @@ service/   Node.js Luna service, also ES5 since older webOS versions ship old No
   lib/tzlocation.js   Looks up coordinates for the TV's timezone in zone.tab
   lib/autostart.js    Writes the Homebrew Channel boot script
 tools/make-icons.js   Generates the app icons (npm run icons)
+tools/set-version.js  Sets the version everywhere it appears (npm run set-version)
+.github/workflows/    Release workflow, runs when a version tag is pushed
 ```
 
 The TV setting is changed with:

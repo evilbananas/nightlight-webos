@@ -34,9 +34,7 @@ function Controller(opts) {
   this.resolveTimezone = opts.resolveTimezone;
   this.now = opts.now || Date.now;
   this.log = opts.log || function () {};
-  var stored = (this.store && this.store.load()) || {};
-  this.config = migrate(assign(clone(schedule.DEFAULT_CONFIG), stored));
-  if (this.store && 'autoLocation' in stored) this.store.save(this.config);
+  this.config = assign(clone(schedule.DEFAULT_CONFIG), (this.store && this.store.load()) || {});
   this.offset = null; // UTC offset in minutes reported by the TV; null = use process timezone
   this.timezone = null;
   this.tzLocation = null; // coordinates of the TV's timezone reference city
@@ -44,17 +42,6 @@ function Controller(opts) {
   this.lastEval = null;
   this.lastApply = null;
   this.tvState = null;
-}
-
-// Upgrades configs saved by older versions (which used IP geolocation).
-function migrate(config) {
-  delete config.autoLocation;
-  if (config.location && config.location.source === 'ip') {
-    config.location = null;
-    config.locationSource = 'tv';
-  }
-  if (config.locationSource === 'manual' && !config.location) config.locationSource = 'tv';
-  return config;
 }
 
 Controller.prototype.getOffset = function () {

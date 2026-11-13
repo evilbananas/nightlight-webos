@@ -1,7 +1,8 @@
 'use strict';
 var fs = require('fs');
 
-// zone.tab first: zone1970.tab merges zones (e.g. Europe/Copenhagen -> Europe/Berlin).
+// zone.tab lists every zone, including ones zone1970.tab leaves out because they are
+// folded into another zone (e.g. Europe/Copenhagen into Europe/Berlin).
 var ZONE_FILES = ['/usr/share/zoneinfo/zone.tab', '/usr/share/zoneinfo/zone1970.tab'];
 
 /** Parses ISO 6709 "+DDMM[SS]" / "+DDDMM[SS]" into decimal degrees. */

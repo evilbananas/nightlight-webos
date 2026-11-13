@@ -1,7 +1,7 @@
 {
   "name": "nightlight-webos",
   "version": "0.1.0",
-  "description": "webOS homebrew app that schedules LG Eye Comfort Mode (blue light reduction) by sunrise/sunset or fixed times",
+  "description": "webOS homebrew app for LG TVs that turns Eye Comfort Mode (blue light filter) on at sunset and off at sunrise, or at times you set.",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -12,7 +12,8 @@
     "test": "node --test",
     "icons": "node tools/make-icons.js",
     "package": "ares-package app service -o dist",
-    "deploy": "ares-install dist/org.nightlightos.app_0.1.0_all.ipk",
+    "set-version": "node tools/set-version.js",
+    "deploy": "node -e \"const a = require('./app/appinfo.json'); require('child_process').execSync('ares-install dist/' + a.id + '_' + a.version + '_all.ipk', { stdio: 'inherit' })\"",
     "launch": "ares-launch org.nightlightos.app"
   },
   "devDependencies": {
