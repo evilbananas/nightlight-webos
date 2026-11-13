@@ -13,6 +13,7 @@ function buildRepo({ appInfo, description, ghRepo, tag, ipkName, ipkData, iconUr
     id: appInfo.id,
     title: appInfo.title,
     description,
+    shortDescription: description,
     iconUri,
     manifest: {
       id: appInfo.id,
