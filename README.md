@@ -4,8 +4,10 @@ NightLight is a homebrew app for rooted LG TVs that turns Eye Comfort Mode (LG's
 evening and off in the morning. It can follow sunset and sunrise, optionally shifted by a number of minutes, or use
 fixed on and off times.
 
-Sunrise and sunset are worked out from the TV's timezone setting. Since a timezone can cover a large area, you can
+Sunrise and sunset are determined from the TV's timezone setting. Since a timezone can cover a large area, you can
 switch Location to Manual in the app and enter your latitude and longitude for better accuracy.
+
+![NightLight app showing Eye Comfort Mode status and schedule settings](docs/screenshot.png)
 
 ## Requirements
 
