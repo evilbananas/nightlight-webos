@@ -1,6 +1,6 @@
 {
   "name": "nightlight-webos",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "webOS homebrew app for LG TVs that turns Eye Comfort Mode (blue light filter) on at sunset and off at sunrise, or at times you set.",
   "private": true,
   "license": "MIT",
