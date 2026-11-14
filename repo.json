@@ -1,0 +1,31 @@
+{
+  "paging": {
+    "page": 1,
+    "count": 1,
+    "maxPage": 1,
+    "itemsTotal": 1
+  },
+  "packages": [
+    {
+      "id": "org.nightlightwebos.app",
+      "title": "NightLight",
+      "description": "webOS homebrew app for LG TVs that turns Eye Comfort Mode (blue light filter) on at sunset and off at sunrise, or at times you set.",
+      "shortDescription": "<p>webOS homebrew app for LG TVs that turns Eye Comfort Mode (blue light filter) on at sunset and off at sunrise, or at times you set.</p>",
+      "iconUri": "https://raw.githubusercontent.com/evilbananas/nightlight-webos/gh-pages/icon.png",
+      "manifest": {
+        "id": "org.nightlightwebos.app",
+        "version": "0.1.1",
+        "type": "web",
+        "title": "NightLight",
+        "appDescription": "webOS homebrew app for LG TVs that turns Eye Comfort Mode (blue light filter) on at sunset and off at sunrise, or at times you set.",
+        "iconUri": "https://raw.githubusercontent.com/evilbananas/nightlight-webos/gh-pages/icon.png",
+        "sourceUrl": "https://github.com/evilbananas/nightlight-webos",
+        "rootRequired": true,
+        "ipkUrl": "https://github.com/evilbananas/nightlight-webos/releases/download/v0.1.1/org.nightlightwebos.app_0.1.1_all.ipk",
+        "ipkHash": {
+          "sha256": "c088c1834d924efa8dedde71853e5b81b797581ea190c9872c0543e50e2fcc68"
+        }
+      }
+    }
+  ]
+}
