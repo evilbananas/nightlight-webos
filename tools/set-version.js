@@ -1,17 +1,22 @@
 'use strict';
 // Sets the version in app/appinfo.json, package.json, package-lock.json and service/package.json.
-// Usage: npm run set-version -- 0.2.0
+// Usage: node tools/set-version.js 0.2.0
+// Without a version, copies the version from package.json into app/appinfo.json and
+// service/package.json. `npm version` runs it this way from the "version" script.
 const fs = require('fs');
 const path = require('path');
 
-const version = process.argv[2];
+const root = path.join(__dirname, '..');
+const arg = process.argv[2];
+const version = arg || require(path.join(root, 'package.json')).version;
 if (!/^\d+\.\d+\.\d+$/.test(version || '')) {
-  console.error('Usage: npm run set-version -- <major.minor.patch>');
+  console.error('Usage: node tools/set-version.js [major.minor.patch]');
   process.exit(1);
 }
 
-const root = path.join(__dirname, '..');
-const files = ['app/appinfo.json', 'package.json', 'package-lock.json', 'service/package.json'];
+const files = arg
+  ? ['app/appinfo.json', 'package.json', 'package-lock.json', 'service/package.json']
+  : ['app/appinfo.json', 'service/package.json'];
 
 for (const file of files) {
   const full = path.join(root, file);

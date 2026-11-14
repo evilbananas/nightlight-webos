@@ -12,7 +12,9 @@
     "test": "node --test",
     "icons": "node tools/make-icons.js",
     "package": "ares-package app service -o dist",
-    "set-version": "node tools/set-version.js",
+    "preversion": "npm test",
+    "version": "node tools/set-version.js && git add app/appinfo.json service/package.json",
+    "postversion": "git push --follow-tags",
     "deploy": "node -e \"const a = require('./app/appinfo.json'); require('child_process').execSync('ares-install dist/' + a.id + '_' + a.version + '_all.ipk', { stdio: 'inherit' })\"",
     "launch": "ares-launch org.nightlightwebos.app"
   },
