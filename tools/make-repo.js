@@ -7,13 +7,18 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function buildRepo({ appInfo, description, ghRepo, tag, ipkName, ipkData, iconUri }) {
   const ipkUrl = `https://github.com/${ghRepo}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(ipkName)}`;
   const pkg = {
     id: appInfo.id,
     title: appInfo.title,
     description,
-    shortDescription: description,
+    // Homebrew Channel renders this as HTML with a -1em top margin that expects a leading <p>.
+    shortDescription: `<p>${escapeHtml(description)}</p>`,
     iconUri,
     manifest: {
       id: appInfo.id,
