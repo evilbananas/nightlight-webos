@@ -49,8 +49,11 @@ then install it using one of the methods below.
 
 ### After installing
 
-Open NightLight once on the TV. That one-time launch sets things up so the schedule keeps running after a reboot
-without opening the app again.
+Open NightLight once on the TV. That launch sets things up so the schedule keeps running after a reboot without
+opening the app again.
+
+Updating NightLight removes its root access and stops the scheduler. Open the app once after each update to start it
+again. If you don't, it starts again the next time the TV boots.
 
 ## Troubleshooting
 
