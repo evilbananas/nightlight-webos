@@ -8,8 +8,7 @@ window.MockLuna = (function () {
     autostartInstalled: false,
     config: {
       enabled: true, mode: 'sun', sunsetOffset: 0, sunriseOffset: 0,
-      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv',       location: null, autostart: true,
-            timeFormat: '24h'
+      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv', location: null, autostart: true
     },
     clock: { offset: 60, timezone: 'Europe/Copenhagen', local: '13:15' },
     eyeComfort: { tv: false, desired: false, lastApply: null },
@@ -35,7 +34,9 @@ window.MockLuna = (function () {
   function call(uri, params, cb) {
     var method = uri.split('/').pop();
     setTimeout(function () {
-      if (method === 'setConfig') {
+      if (method === 'getPreferences') {
+        return cb({ returnValue: true, timeFormat: 'HH24' });
+      } else if (method === 'setConfig') {
         for (var k in params.config) state.config[k] = params.config[k];
         state.autostartInstalled = state.elevated && state.config.autostart;
       } else if (method === 'setEyeComfort') {

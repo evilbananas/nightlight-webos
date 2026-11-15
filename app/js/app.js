@@ -2,6 +2,7 @@
   var SERVICE_ID = 'org.nightlightwebos.app.service';
   var SERVICE = 'luna://' + SERVICE_ID + '/';
   var HBCHANNEL_EXEC = 'luna://org.webosbrew.hbchannel.service/exec';
+  var SYSTEM_PREFS = 'luna://com.palm.systemservice/getPreferences';
   var ELEVATE = '/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service';
   var POLL_MS = 5000;
   var SAVE_DELAY_MS = 600;
@@ -18,6 +19,7 @@
   var manualDraft = false;
   var elevateState = 'idle'; // 'idle' | 'running' | 'done' | 'failed'
   var elevateError = null;
+  var timeFormat = '24h'; // from the TV's clock setting; '24h' | '12h'
 
   function $(id) { return document.getElementById(id); }
   function qsa(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -59,16 +61,11 @@
     return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
   }
 
-  function timeFormat() {
-    var c = draft || (status && status.config);
-    return c && c.timeFormat === '12h' ? '12h' : '24h';
-  }
-
   // Times stay HH:MM everywhere else; this only changes what's shown.
   function displayTime(s) {
     if (!s) return '—';
     var m = /^(\d{1,2}):(\d{2})$/.exec(s);
-    if (!m || timeFormat() !== '12h') return s;
+    if (!m || timeFormat !== '12h') return s;
     var h = +m[1];
     return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
   }
@@ -210,8 +207,20 @@
     Luna.call(SERVICE + 'getStatus', {}, function (res) { onStatus(res, true); });
   }
 
+  // Keeps the current format if the preference can't be read.
+  function loadTimeFormat() {
+    Luna.call(SYSTEM_PREFS, { keys: ['timeFormat'] }, function (res) {
+      if (!res.returnValue || (res.timeFormat !== 'HH12' && res.timeFormat !== 'HH24')) return;
+      var next = res.timeFormat === 'HH12' ? '12h' : '24h';
+      if (next === timeFormat) return;
+      timeFormat = next;
+      render();
+    });
+  }
+
   function startPolling() {
     stopPolling();
+    loadTimeFormat();
     refresh();
     pollTimer = setInterval(refresh, POLL_MS);
   }
@@ -251,8 +260,7 @@
     }
     draft[key] = value;
     pending[key] = value;
-    if (key === 'timeFormat') render();
-    else renderSettings();
+    renderSettings();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(save, SAVE_DELAY_MS);
   }

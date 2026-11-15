@@ -35,6 +35,8 @@ function Controller(opts) {
   this.now = opts.now || Date.now;
   this.log = opts.log || function () {};
   this.config = assign(clone(schedule.DEFAULT_CONFIG), (this.store && this.store.load()) || {});
+  // Saved by v0.2.x; the app now follows the TV's clock format instead.
+  delete this.config.timeFormat;
   this.offset = null; // UTC offset in minutes reported by the TV; null = use process timezone
   this.timezone = null;
   this.tzLocation = null; // coordinates of the TV's timezone reference city
