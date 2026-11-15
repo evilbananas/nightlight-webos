@@ -45,14 +45,13 @@ npm run launch    # opens the app on the TV
 
 ## Releasing
 
-Commit everything first, then bump the version:
+Commit everything first, then set the new version:
 
 ```sh
-npm version minor   # or patch / major
+npm version <x.y.z>
 ```
 
-Use `minor` for new features and `patch` for fixes only. To set an exact version instead, pass it directly, for
-example `npm version <x.y.z>`. The command:
+You can also use `npm version patch`, `minor` or `major` to bump from the current version. The command:
 
 1. Runs the tests and stops if any fail.
 2. Sets the version in `package.json`, `package-lock.json`, `app/appinfo.json` and `service/package.json`.
