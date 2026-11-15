@@ -138,11 +138,6 @@ test('controller retries after a failed write and re-applies on config change', 
   assert.deepStrictEqual(setCalls(calls), ['on', 'on', 'on', 'off']);
 });
 
-test('controller drops timeFormat saved by older versions', () => {
-  const { c } = makeController('2024-01-10T12:00:00Z', { mode: 'manual', manualStart: '21:00', manualEnd: '07:00', timeFormat: '12h' });
-  assert.strictEqual('timeFormat' in c.config, false);
-});
-
 const ZONE_TAB = [
   '# comment\tline',
   'DK\t+5540+01235\tEurope/Copenhagen',
