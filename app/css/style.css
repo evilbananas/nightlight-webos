@@ -49,6 +49,9 @@ main {
   width: 36%; margin-right: 2rem; overflow: hidden;
 }
 .settings-card { -webkit-flex: 1; flex: 1; overflow: hidden; position: relative; }
+.settings-card.loading > * { display: none; }
+.loading-text { display: none; margin: 0; font-size: 1.3rem; color: #a99fbd; }
+.settings-card.loading > .loading-text { display: block; }
 
 .state-label { color: #a99fbd; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
 .state { font-size: 4.4rem; font-weight: 700; margin: 0.3rem 0 0.4rem; color: #8a8199; }
@@ -98,7 +101,7 @@ h2 {
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
-h2:first-child { margin-top: 0; }
+h2:first-child, .loading-text + h2 { margin-top: 0; }
 
 .setting {
   display: -webkit-flex; display: flex;

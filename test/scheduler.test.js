@@ -138,6 +138,21 @@ test('controller retries after a failed write and re-applies on config change', 
   assert.deepStrictEqual(setCalls(calls), ['on', 'on', 'on', 'off']);
 });
 
+test('controller stays idle and rejects changes when the config store is unavailable', () => {
+  const calls = [];
+  const c = new Controller({
+    now: () => Date.parse('2024-01-10T22:00:00Z'),
+    store: { available: () => false, load: () => null, save: () => assert.fail('should not save') },
+    luna: { call: (uri, params, cb) => { calls.push(uri); cb(null, {}); } }
+  });
+  c.setClock(0);
+  c.start();
+  c.tick();
+  assert.ok(!calls.some((uri) => uri.endsWith('/setSystemSettings')));
+  assert.match(c.updateConfig({ mode: 'manual' }), /root access/);
+  assert.strictEqual(c.status().configAvailable, false);
+});
+
 const ZONE_TAB = [
   '# comment\tline',
   'DK\t+5540+01235\tEurope/Copenhagen',

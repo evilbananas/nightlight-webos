@@ -23,6 +23,8 @@ window.MockLuna = (function () {
 
   function copy() {
     var c = state.config;
+    // Mirrors the real service, which can't read the saved config until it has root.
+    state.configAvailable = state.elevated;
     var loc = c.locationSource === 'manual' ? c.location : TZ_LOC;
     state.location = {
       source: c.locationSource, latitude: loc.latitude, longitude: loc.longitude,

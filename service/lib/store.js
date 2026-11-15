@@ -28,6 +28,11 @@ function Store(dirs) {
   this.file = pickFile(dirs || CANDIDATE_DIRS);
 }
 
+/** False when no config directory can be used, e.g. before the service has root. */
+Store.prototype.available = function () {
+  return this.file !== null;
+};
+
 Store.prototype.load = function () {
   if (!this.file) return null;
   try {

@@ -34,6 +34,8 @@ function Controller(opts) {
   this.resolveTimezone = opts.resolveTimezone;
   this.now = opts.now || Date.now;
   this.log = opts.log || function () {};
+  // Without the saved config we'd schedule with defaults, so stay idle until restarted with access.
+  this.configAvailable = !(this.store && this.store.available && !this.store.available());
   this.config = assign(clone(schedule.DEFAULT_CONFIG), (this.store && this.store.load()) || {});
   this.offset = null; // UTC offset in minutes reported by the TV; null = use process timezone
   this.timezone = null;
@@ -76,7 +78,7 @@ Controller.prototype.locationError = function () {
 };
 
 Controller.prototype.tick = function () {
-  if (!this.config.enabled) {
+  if (!this.configAvailable || !this.config.enabled) {
     this.lastEval = null;
     this.lastDesired = null;
     return;
@@ -122,6 +124,7 @@ Controller.prototype.refreshTvState = function (cb) {
 
 /** Merges `patch` into the config. Returns an error string or null. */
 Controller.prototype.updateConfig = function (patch) {
+  if (!this.configAvailable) return 'Settings can\'t be read or saved until the service has root access';
   var next = assign(clone(this.config), patch || {});
   next.enabled = !!next.enabled;
   next.autostart = !!next.autostart;
@@ -152,6 +155,7 @@ Controller.prototype.status = function () {
   var ev = this.lastEval;
   var loc = this.effectiveLocation();
   return {
+    configAvailable: this.configAvailable,
     config: clone(this.config),
     clock: {
       offset: this.getOffset(),

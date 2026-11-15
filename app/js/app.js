@@ -97,8 +97,10 @@
     stateEl.className = 'state' + (tv === true ? ' on' : tv === false ? ' off' : '');
 
     var sched = status.schedule || {};
+    var ready = status.configAvailable !== false;
     var next;
-    if (!status.config.enabled) next = 'Scheduler is off';
+    if (!ready) next = 'Waiting for root access to load your settings…';
+    else if (!status.config.enabled) next = 'Scheduler is off';
     else if (!sched.ok) next = 'Not scheduled';
     else if (sched.next) next = 'Turns ' + (sched.next.on ? 'on' : 'off') + ' at ' + displayTime(sched.next.local) + ' · in ' + duration(sched.next.inMinutes);
     else if (sched.today && sched.today.polar === 'night') next = 'Polar night: on all day';
@@ -112,13 +114,16 @@
     $('sunset').textContent = displayTime(today.sunset);
     $('onAt').textContent = displayTime(today.onAt);
     $('offAt').textContent = displayTime(today.offAt);
-    $('locationText').textContent = locationText(status.location);
+    $('locationText').textContent = ready ? locationText(status.location) : '—';
+    $('rootText').textContent = status.elevated
+      ? 'Yes' + (status.autostartInstalled ? ', starts at boot' : '')
+      : elevateState === 'running' ? 'Requesting…' : 'No';
     $('version').textContent = 'v' + status.version;
 
     if (!status.elevated && elevateState === 'failed') {
       alerts.push({ text: 'No root access, so the schedule won\'t start after a reboot until you open this app. Homebrew Channel said: ' + elevateError });
     }
-    if (status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
+    if (ready && status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
     var la = status.eyeComfort.lastApply;
     if (la && !la.ok) alerts.push({ error: true, text: 'Could not change Eye Comfort Mode: ' + la.error });
     if (status.warning) alerts.push({ text: status.warning });
@@ -139,7 +144,11 @@
   }
 
   function renderSettings() {
-    if (!draft) return;
+    $('settings').classList.toggle('loading', !draft);
+    if (!draft) {
+      Nav.ensureFocus();
+      return;
+    }
     qsa('.seg').forEach(function (seg) {
       var value = String(draft[seg.getAttribute('data-key')]);
       Array.prototype.forEach.call(seg.children, function (opt) {
@@ -172,11 +181,6 @@
       renderedLocation = locKey;
     }
 
-    if (status) {
-      $('rootText').textContent = status.elevated
-        ? 'Yes' + (status.autostartInstalled ? ', starts at boot' : '')
-        : elevateState === 'running' ? 'Requesting…' : 'No';
-    }
     Nav.ensureFocus();
   }
 
@@ -198,8 +202,8 @@
     status = res;
     if (!res.elevated && elevateState === 'idle') elevate();
     if (!hasPending() && !saving) {
-      draft = clone(res.config);
-      if (manualDraft) draft.locationSource = 'manual';
+      draft = res.configAvailable === false ? null : clone(res.config);
+      if (draft && manualDraft) draft.locationSource = 'manual';
     }
     render();
     return true;
@@ -241,7 +245,7 @@
       saving = false;
       if (!onStatus(res)) {
         // Roll the UI back to what the service has.
-        if (status) draft = clone(status.config);
+        if (status) draft = status.configAvailable === false ? null : clone(status.config);
         render();
       } else {
         toast('Saved');
