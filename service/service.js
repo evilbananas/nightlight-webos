@@ -1,5 +1,4 @@
 'use strict';
-var childProcess = require('child_process');
 var Service = require('webos-service');
 var Controller = require('./lib/controller');
 var Store = require('./lib/store');
@@ -20,33 +19,12 @@ function isRoot() {
   return typeof process.getuid === 'function' && process.getuid() === 0;
 }
 
-function lunaSend(uri, params, cb) {
-  childProcess.execFile('luna-send', ['-n', '1', uri, JSON.stringify(params)], { timeout: 10000 }, function (err, stdout) {
-    if (err) return cb(err);
-    var payload;
-    try {
-      payload = JSON.parse(String(stdout).trim());
-    } catch (e) {
-      return cb(new Error('Unexpected luna-send output: ' + stdout));
-    }
-    if (payload.returnValue === false) return cb(new Error(payload.errorText || 'luna-send failed'), payload);
-    cb(null, payload);
-  });
-}
-
-// Calls the bus as this service; when that is denied and we are root, retries
-// through luna-send, which runs with full privileges on rooted TVs.
 var luna = {
   call: function (uri, params, cb) {
     service.call(uri, params, function (msg) {
       var p = msg.payload || {};
       if (p.returnValue) return cb(null, p);
-      var err = new Error(p.errorText || 'Call to ' + uri + ' failed');
-      if (!isRoot()) return cb(err, p);
-      lunaSend(uri, params, function (err2, p2) {
-        if (err2) return cb(new Error(err.message + '; luna-send: ' + err2.message), p2);
-        cb(null, p2);
-      });
+      cb(new Error(p.errorText || 'Call to ' + uri + ' failed'), p);
     });
   }
 };
