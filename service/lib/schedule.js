@@ -3,6 +3,8 @@ var sun = require('./sun');
 
 var MIN_MS = 60000;
 var DAY_MS = 86400000;
+// Matches data-min/data-max on the offset steppers in app/index.html.
+var MAX_OFFSET = 240;
 
 var DEFAULT_CONFIG = {
   enabled: true,
@@ -52,8 +54,8 @@ function isNum(v) {
 /** Returns an error string, or null if the config is valid. */
 function validateConfig(c) {
   if (c.mode !== 'sun' && c.mode !== 'manual') return 'mode must be "sun" or "manual"';
-  if (!isNum(c.sunsetOffset) || Math.abs(c.sunsetOffset) > 720) return 'sunsetOffset must be within ±720 minutes';
-  if (!isNum(c.sunriseOffset) || Math.abs(c.sunriseOffset) > 720) return 'sunriseOffset must be within ±720 minutes';
+  if (!isNum(c.sunsetOffset) || Math.abs(c.sunsetOffset) > MAX_OFFSET) return 'sunsetOffset must be within ±' + MAX_OFFSET + ' minutes';
+  if (!isNum(c.sunriseOffset) || Math.abs(c.sunriseOffset) > MAX_OFFSET) return 'sunriseOffset must be within ±' + MAX_OFFSET + ' minutes';
   if (isNaN(parseHHMM(c.manualStart))) return 'manualStart must be HH:MM';
   if (isNaN(parseHHMM(c.manualEnd))) return 'manualEnd must be HH:MM';
   if (parseHHMM(c.manualStart) === parseHHMM(c.manualEnd)) return 'manualStart and manualEnd must differ';
@@ -68,18 +70,17 @@ function validateConfig(c) {
 }
 
 /**
- * On/off events (UTC ms) for the local day starting at `dayStart`.
+ * On/off events (UTC ms) for the local day starting at `dayStart`. In sun mode, `t`
+ * holds that day's sun times from sun.getSunTimes.
  * Each event: { at, on: boolean, kind }.
  */
-function eventsForDay(config, dayStart) {
+function eventsForDay(config, dayStart, t) {
   if (config.mode === 'manual') {
     return [
       { at: dayStart + parseHHMM(config.manualStart) * MIN_MS, on: true, kind: 'start' },
       { at: dayStart + parseHHMM(config.manualEnd) * MIN_MS, on: false, kind: 'end' }
     ];
   }
-  var loc = config.location;
-  var t = sun.getSunTimes(dayStart + DAY_MS / 2, loc.latitude, loc.longitude);
   if (t.polar === 'night') return [{ at: dayStart, on: true, kind: 'polar-night' }];
   if (t.polar === 'day') return [{ at: dayStart, on: false, kind: 'polar-day' }];
   return [
@@ -89,12 +90,11 @@ function eventsForDay(config, dayStart) {
 }
 
 /**
- * Evaluates the schedule at `now`. In sun mode, `config.location` must hold the
- * effective coordinates (the controller resolves TV timezone vs. manual).
+ * Evaluates the schedule at `now`. `location` is the {latitude, longitude} used in sun mode.
  * @returns {{ok: boolean, error?: string, desired?: boolean, next?: object, today?: object}}
  */
-function evaluate(config, now, offsetMin) {
-  if (config.mode === 'sun' && !config.location) {
+function evaluate(config, location, now, offsetMin) {
+  if (config.mode === 'sun' && !location) {
     return { ok: false, error: 'No location available.' };
   }
   var err = validateConfig(config);
@@ -102,8 +102,14 @@ function evaluate(config, now, offsetMin) {
 
   var today = localDayStart(now, offsetMin);
   var events = [];
+  var todaySun = null;
   for (var i = -1; i <= 1; i++) {
-    events = events.concat(eventsForDay(config, today + i * DAY_MS));
+    var dayStart = today + i * DAY_MS;
+    var t = config.mode === 'sun'
+      ? sun.getSunTimes(dayStart + DAY_MS / 2, location.latitude, location.longitude)
+      : null;
+    if (i === 0) todaySun = t;
+    events = events.concat(eventsForDay(config, dayStart, t));
   }
   events.sort(function (a, b) { return a.at - b.at; });
 
@@ -130,13 +136,12 @@ function evaluate(config, now, offsetMin) {
     };
   }
 
-  if (config.mode === 'sun') {
-    var t = sun.getSunTimes(today + DAY_MS / 2, config.location.latitude, config.location.longitude);
-    result.today.polar = t.polar;
-    result.today.sunrise = t.sunrise === null ? null : localTime(t.sunrise, offsetMin);
-    result.today.sunset = t.sunset === null ? null : localTime(t.sunset, offsetMin);
-    result.today.onAt = t.sunset === null ? null : localTime(t.sunset + config.sunsetOffset * MIN_MS, offsetMin);
-    result.today.offAt = t.sunrise === null ? null : localTime(t.sunrise + config.sunriseOffset * MIN_MS, offsetMin);
+  if (todaySun) {
+    result.today.polar = todaySun.polar;
+    result.today.sunrise = todaySun.sunrise === null ? null : localTime(todaySun.sunrise, offsetMin);
+    result.today.sunset = todaySun.sunset === null ? null : localTime(todaySun.sunset, offsetMin);
+    result.today.onAt = todaySun.sunset === null ? null : localTime(todaySun.sunset + config.sunsetOffset * MIN_MS, offsetMin);
+    result.today.offAt = todaySun.sunrise === null ? null : localTime(todaySun.sunrise + config.sunriseOffset * MIN_MS, offsetMin);
   } else {
     result.today.onAt = formatHHMM(parseHHMM(config.manualStart));
     result.today.offAt = formatHHMM(parseHHMM(config.manualEnd));

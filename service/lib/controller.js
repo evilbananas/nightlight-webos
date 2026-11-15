@@ -83,9 +83,9 @@ Controller.prototype.tick = function () {
     this.lastDesired = null;
     return;
   }
-  var cfg = assign(clone(this.config), { location: this.effectiveLocation() });
-  var ev = schedule.evaluate(cfg, this.now(), this.getOffset());
-  if (!ev.ok && cfg.mode === 'sun' && !cfg.location) ev.error = this.locationError();
+  var loc = this.effectiveLocation();
+  var ev = schedule.evaluate(this.config, loc, this.now(), this.getOffset());
+  if (!ev.ok && this.config.mode === 'sun' && !loc) ev.error = this.locationError();
   this.lastEval = ev;
   if (!ev.ok) return;
   if (ev.desired !== this.lastDesired) {

@@ -41,30 +41,30 @@ const cfg = (over) => Object.assign({}, schedule.DEFAULT_CONFIG, over);
 test('manual window wrapping midnight', () => {
   const c = cfg({ mode: 'manual', manualStart: '21:00', manualEnd: '07:00' });
   // UTC+1: 22:00 local = 21:00 UTC
-  let r = schedule.evaluate(c, Date.parse('2024-01-10T21:00:00Z'), 60);
+  let r = schedule.evaluate(c, null, Date.parse('2024-01-10T21:00:00Z'), 60);
   assert.strictEqual(r.desired, true);
   assert.strictEqual(r.next.on, false);
   assert.strictEqual(r.next.local, '07:00');
   assert.strictEqual(r.next.inMinutes, 9 * 60);
 
   // 06:59 local is still on, 07:00 local is off.
-  assert.strictEqual(schedule.evaluate(c, Date.parse('2024-01-11T05:59:00Z'), 60).desired, true);
-  r = schedule.evaluate(c, Date.parse('2024-01-11T06:00:00Z'), 60);
+  assert.strictEqual(schedule.evaluate(c, null, Date.parse('2024-01-11T05:59:00Z'), 60).desired, true);
+  r = schedule.evaluate(c, null, Date.parse('2024-01-11T06:00:00Z'), 60);
   assert.strictEqual(r.desired, false);
   assert.strictEqual(r.next.local, '21:00');
 });
 
 test('manual window within a single day', () => {
   const c = cfg({ mode: 'manual', manualStart: '01:30', manualEnd: '05:00' });
-  assert.strictEqual(schedule.evaluate(c, Date.parse('2024-01-10T02:00:00Z'), 0).desired, true);
-  assert.strictEqual(schedule.evaluate(c, Date.parse('2024-01-10T23:00:00Z'), 0).desired, false);
+  assert.strictEqual(schedule.evaluate(c, null, Date.parse('2024-01-10T02:00:00Z'), 0).desired, true);
+  assert.strictEqual(schedule.evaluate(c, null, Date.parse('2024-01-10T23:00:00Z'), 0).desired, false);
 });
 
 test('sun mode with offsets', () => {
-  const c = cfg({ mode: 'sun', location: LONDON, sunsetOffset: 30, sunriseOffset: -15 });
+  const c = cfg({ mode: 'sun', sunsetOffset: 30, sunriseOffset: -15 });
   // Sunset 20:21 UTC (+30 -> 20:51), BST = UTC+60
-  assert.strictEqual(schedule.evaluate(c, Date.parse('2024-06-21T20:40:00Z'), 60).desired, false);
-  const r = schedule.evaluate(c, Date.parse('2024-06-21T21:00:00Z'), 60);
+  assert.strictEqual(schedule.evaluate(c, LONDON, Date.parse('2024-06-21T20:40:00Z'), 60).desired, false);
+  const r = schedule.evaluate(c, LONDON, Date.parse('2024-06-21T21:00:00Z'), 60);
   assert.strictEqual(r.desired, true);
   assert.strictEqual(r.next.on, false);
   near(r.next.at, '2024-06-22T03:28:00Z');
@@ -72,14 +72,14 @@ test('sun mode with offsets', () => {
 });
 
 test('sun mode during polar night stays on with no next transition', () => {
-  const r = schedule.evaluate(cfg({ location: TROMSO }), Date.parse('2024-12-21T11:00:00Z'), 60);
+  const r = schedule.evaluate(cfg(), TROMSO, Date.parse('2024-12-21T11:00:00Z'), 60);
   assert.strictEqual(r.desired, true);
   assert.strictEqual(r.next, undefined);
   assert.strictEqual(r.today.polar, 'night');
 });
 
 test('sun mode without location reports an error', () => {
-  const r = schedule.evaluate(cfg({ location: null }), Date.now(), 0);
+  const r = schedule.evaluate(cfg(), null, Date.now(), 0);
   assert.strictEqual(r.ok, false);
 });
 
