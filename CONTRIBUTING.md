@@ -45,17 +45,18 @@ npm run launch    # opens the app on the TV
 
 ## Releasing
 
-Commit everything first, then run:
+Commit everything first, then bump the version:
 
 ```sh
-npm version 0.2.0
+npm version minor   # or patch / major
 ```
 
-You can also use `npm version patch`, `minor` or `major` to bump from the current version. The command:
+Use `minor` for new features and `patch` for fixes only. To set an exact version instead, pass it directly, for
+example `npm version <x.y.z>`. The command:
 
 1. Runs the tests and stops if any fail.
 2. Sets the version in `package.json`, `package-lock.json`, `app/appinfo.json` and `service/package.json`.
-3. Commits the change as "Bump version to v0.2.0" and creates the tag `v0.2.0`.
+3. Commits the change as `Bump version to v<x.y.z>` and creates the tag `v<x.y.z>`.
 4. Pushes the commit and the tag to GitHub.
 
 The tag starts the [release workflow](.github/workflows/release.yml), which:
