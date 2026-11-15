@@ -8,7 +8,7 @@ This covers building, testing and releasing NightLight. For installing and using
 - `app/` is the web app shown on the TV.
 - `service/` is the background service that switches Eye Comfort Mode on schedule.
 - `test/` has the tests for the scheduling code, run with Node's built-in test runner.
-- `tools/` has scripts for icons, versioning and the Homebrew Channel repo.
+- `tools/` has scripts for versioning and the Homebrew Channel repo.
 
 ## Setup
 
@@ -42,7 +42,6 @@ npm run package   # builds dist/org.nightlightwebos.app_<version>_all.ipk
 npm run deploy    # installs the .ipk for the current version on the TV
 npm run launch    # opens the app on the TV
 ```
-To regenerate the icons in `app/`, run `npm run icons`.
 
 ## Releasing
 

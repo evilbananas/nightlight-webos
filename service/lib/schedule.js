@@ -13,7 +13,8 @@ var DEFAULT_CONFIG = {
   manualEnd: '07:00',
   locationSource: 'tv', // 'tv' (coordinates of the TV's timezone) | 'manual'
   location: null, // manual coordinates: { latitude, longitude, label }
-  autostart: true
+  autostart: true,
+  timeFormat: '24h' // '24h' | '12h', display only
 };
 
 function parseHHMM(value) {
@@ -58,6 +59,7 @@ function validateConfig(c) {
   if (isNaN(parseHHMM(c.manualEnd))) return 'manualEnd must be HH:MM';
   if (parseHHMM(c.manualStart) === parseHHMM(c.manualEnd)) return 'manualStart and manualEnd must differ';
   if (c.locationSource !== 'tv' && c.locationSource !== 'manual') return 'locationSource must be "tv" or "manual"';
+  if (c.timeFormat !== '24h' && c.timeFormat !== '12h') return 'timeFormat must be "24h" or "12h"';
   if (c.locationSource === 'manual' && !c.location) return 'Enter coordinates to use a manual location';
   if (c.location) {
     var loc = c.location;
@@ -146,10 +148,7 @@ function evaluate(config, now, offsetMin) {
 
 module.exports = {
   DEFAULT_CONFIG: DEFAULT_CONFIG,
-  parseHHMM: parseHHMM,
-  formatHHMM: formatHHMM,
   localTime: localTime,
-  localDayStart: localDayStart,
   validateConfig: validateConfig,
   evaluate: evaluate
 };

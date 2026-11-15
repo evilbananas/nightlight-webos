@@ -10,7 +10,6 @@
   },
   "scripts": {
     "test": "node --test",
-    "icons": "node tools/make-icons.js",
     "package": "ares-package app service -o dist",
     "preversion": "npm test",
     "version": "node tools/set-version.js && git add app/appinfo.json service/package.json",

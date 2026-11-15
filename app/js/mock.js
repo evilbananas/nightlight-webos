@@ -8,7 +8,8 @@ window.MockLuna = (function () {
     autostartInstalled: false,
     config: {
       enabled: true, mode: 'sun', sunsetOffset: 0, sunriseOffset: 0,
-      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv', location: null, autostart: true
+      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv',       location: null, autostart: true,
+            timeFormat: '24h'
     },
     clock: { offset: 60, timezone: 'Europe/Copenhagen', local: '13:15' },
     eyeComfort: { tv: false, desired: false, lastApply: null },

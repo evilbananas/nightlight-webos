@@ -59,6 +59,20 @@
     return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
   }
 
+  function timeFormat() {
+    var c = draft || (status && status.config);
+    return c && c.timeFormat === '12h' ? '12h' : '24h';
+  }
+
+  // Times stay HH:MM everywhere else; this only changes what's shown.
+  function displayTime(s) {
+    if (!s) return '—';
+    var m = /^(\d{1,2}):(\d{2})$/.exec(s);
+    if (!m || timeFormat() !== '12h') return s;
+    var h = +m[1];
+    return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
+  }
+
   function locationText(loc) {
     if (!loc || loc.latitude === null || loc.latitude === undefined) return 'Not set';
     var coords = loc.latitude.toFixed(2) + ', ' + loc.longitude.toFixed(2);
@@ -89,18 +103,18 @@
     var next;
     if (!status.config.enabled) next = 'Scheduler is off';
     else if (!sched.ok) next = 'Not scheduled';
-    else if (sched.next) next = 'Turns ' + (sched.next.on ? 'on' : 'off') + ' at ' + sched.next.local + ' · in ' + duration(sched.next.inMinutes);
+    else if (sched.next) next = 'Turns ' + (sched.next.on ? 'on' : 'off') + ' at ' + displayTime(sched.next.local) + ' · in ' + duration(sched.next.inMinutes);
     else if (sched.today && sched.today.polar === 'night') next = 'Polar night: on all day';
     else if (sched.today && sched.today.polar === 'day') next = 'Midnight sun: off all day';
     else next = '';
     $('next').textContent = next;
 
     var today = sched.today || {};
-    $('localTime').textContent = status.clock.local + (status.clock.timezone ? ' (' + status.clock.timezone + ')' : '');
-    $('sunrise').textContent = today.sunrise || '—';
-    $('sunset').textContent = today.sunset || '—';
-    $('onAt').textContent = today.onAt || '—';
-    $('offAt').textContent = today.offAt || '—';
+    $('localTime').textContent = displayTime(status.clock.local) + (status.clock.timezone ? ' (' + status.clock.timezone + ')' : '');
+    $('sunrise').textContent = displayTime(today.sunrise);
+    $('sunset').textContent = displayTime(today.sunset);
+    $('onAt').textContent = displayTime(today.onAt);
+    $('offAt').textContent = displayTime(today.offAt);
     $('locationText').textContent = locationText(status.location);
     $('version').textContent = 'v' + status.version;
 
@@ -137,7 +151,7 @@
       var key = st.getAttribute('data-key');
       var text = st.getAttribute('data-kind') === 'offset'
         ? formatOffset(draft[key], st.getAttribute('data-event'))
-        : draft[key];
+        : displayTime(draft[key]);
       st.querySelector('.value').textContent = text;
     });
     qsa('.mode-sun').forEach(function (el) { el.classList.toggle('hidden', draft.mode !== 'sun'); });
@@ -237,7 +251,8 @@
     }
     draft[key] = value;
     pending[key] = value;
-    renderSettings();
+    if (key === 'timeFormat') render();
+    else renderSettings();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(save, SAVE_DELAY_MS);
   }

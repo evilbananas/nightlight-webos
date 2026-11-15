@@ -138,6 +138,15 @@ test('controller retries after a failed write and re-applies on config change', 
   assert.deepStrictEqual(setCalls(calls), ['on', 'on', 'on', 'off']);
 });
 
+test('controller defaults timeFormat to 24h for older configs and validates it', () => {
+  const { c } = makeController('2024-01-10T12:00:00Z', { mode: 'manual', manualStart: '21:00', manualEnd: '07:00' });
+  assert.strictEqual(c.config.timeFormat, '24h');
+  assert.strictEqual(c.updateConfig({ timeFormat: '12h' }), null);
+  assert.strictEqual(c.config.timeFormat, '12h');
+  assert.match(c.updateConfig({ timeFormat: 'am/pm' }), /timeFormat/);
+  assert.strictEqual(c.config.timeFormat, '12h');
+});
+
 const ZONE_TAB = [
   '# comment\tline',
   'DK\t+5540+01235\tEurope/Copenhagen',

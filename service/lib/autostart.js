@@ -59,4 +59,4 @@ function uninstall(serviceId) {
   if (fs.existsSync(file)) fs.unlinkSync(file);
 }
 
-module.exports = { install: install, uninstall: uninstall, isInstalled: isInstalled, ELEVATE: ELEVATE };
+module.exports = { install: install, uninstall: uninstall, isInstalled: isInstalled };

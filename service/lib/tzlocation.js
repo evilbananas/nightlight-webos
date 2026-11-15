@@ -52,4 +52,4 @@ function resolve(timezone, files) {
   return null;
 }
 
-module.exports = { parseCoordinates: parseCoordinates, findInZoneTab: findInZoneTab, resolve: resolve };
+module.exports = { findInZoneTab: findInZoneTab, resolve: resolve };
