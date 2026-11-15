@@ -1,6 +1,6 @@
 {
   "id": "org.nightlightwebos.app",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "vendor": "NightLight",
   "type": "web",
   "main": "index.html",
