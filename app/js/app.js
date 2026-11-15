@@ -116,7 +116,7 @@
     $('version').textContent = 'v' + status.version;
 
     if (!status.elevated && elevateState === 'failed') {
-      alerts.push({ text: 'Could not get root access through Homebrew Channel (' + elevateError + '). The schedule works while the TV is on, but it won\'t start again after a reboot until you open this app.' });
+      alerts.push({ text: 'No root access, so the schedule won\'t start after a reboot until you open this app. Homebrew Channel said: ' + elevateError });
     }
     if (status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
     var la = status.eyeComfort.lastApply;
@@ -131,7 +131,9 @@
     alerts.forEach(function (a) {
       var div = document.createElement('div');
       div.className = 'alert' + (a.error ? ' error' : '');
-      div.textContent = a.text;
+      var span = document.createElement('span');
+      span.textContent = a.text;
+      div.appendChild(span);
       box.appendChild(div);
     });
   }
@@ -320,20 +322,29 @@
   function elevate() {
     elevateState = 'running';
     Luna.call(HBCHANNEL_EXEC, { command: ELEVATE + ' ' + SERVICE_ID }, function (res) {
-      if (!res.returnValue) {
-        elevateState = 'failed';
-        elevateError = res.errorText || res.stderrString || 'exec failed';
-        render();
-        return;
-      }
-      // Restart the service so it relaunches with root privileges.
+      var err = res.returnValue ? null : res.errorText || res.stderrString || 'exec failed';
+      // elevate-service can fail on its final service rescan after it has already
+      // patched the service, so restart and check before reporting a failure.
       Luna.call(SERVICE + 'restart', {}, function () {
         setTimeout(function () {
-          elevateState = 'done';
-          refresh();
+          Luna.call(SERVICE + 'getStatus', {}, function (st) {
+            if (err && !(st.returnValue && st.elevated)) {
+              elevateState = 'failed';
+              elevateError = shorten(err);
+            } else {
+              elevateState = 'done';
+            }
+            onStatus(st, true);
+          });
         }, 1500);
       });
     });
+  }
+
+  // First line only, so a stack trace from the exec doesn't fill the screen.
+  function shorten(text) {
+    var line = String(text).split('\n')[0].trim();
+    return line.length > 120 ? line.slice(0, 117) + '…' : line;
   }
 
   function onClick(e) {

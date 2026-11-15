@@ -43,7 +43,11 @@ main {
   padding: 2rem 2.4rem;
 }
 
-.status-card { width: 36%; margin-right: 2rem; overflow: hidden; }
+.status-card {
+  display: -webkit-flex; display: flex;
+  -webkit-flex-direction: column; flex-direction: column;
+  width: 36%; margin-right: 2rem; overflow: hidden;
+}
 .settings-card { -webkit-flex: 1; flex: 1; overflow: hidden; position: relative; }
 
 .state-label { color: #a99fbd; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
@@ -61,6 +65,13 @@ main {
 .facts dt { width: 42%; color: #a99fbd; margin: 0 0 0.45rem; }
 .facts dd { width: 58%; margin: 0 0 0.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Alerts get whatever space is left under the buttons and never push them around. */
+.alerts {
+  -webkit-flex: 1; flex: 1;
+  min-height: 0;
+  margin-top: 1rem;
+  overflow: hidden;
+}
 .alert {
   border-radius: 0.6rem;
   padding: 0.7rem 1rem;
@@ -69,6 +80,13 @@ main {
   line-height: 1.35;
   background: rgba(255, 179, 71, 0.12);
   border-left: 0.3rem solid #ffb347;
+}
+.alert span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-height: 2.7em;
 }
 .alert.error { background: rgba(255, 99, 99, 0.12); border-left-color: #ff6b6b; }
 
