@@ -7,6 +7,9 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 
+// Updates remove the service's root access, and opening the app restores it.
+const INSTALL_NOTE = 'Open the app once after installing or updating to start the scheduler.';
+
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -17,8 +20,13 @@ function buildRepo({ appInfo, description, ghRepo, tag, ipkName, ipkData, iconUr
     id: appInfo.id,
     title: appInfo.title,
     description,
-    // Homebrew Channel renders this as HTML with a -1em top margin that expects a leading <p>.
-    shortDescription: `<p>${escapeHtml(description)}</p>`,
+    // Homebrew Channel renders this as HTML in the details panel.
+    shortDescription: [
+      `<p>${escapeHtml(description)}</p>`,
+      // Homebrew Channel registers each font weight as a separate family, so font-weight has no
+      // effect; "MuseoSans 700" is the bold face its own labels use. #cf0652 is its accent color.
+      `<p><strong style="font-family: 'MuseoSans 700'; color: #cf0652">Install/Update Notes</strong><br>${escapeHtml(INSTALL_NOTE)}</p>`,
+    ].join(''),
     iconUri,
     manifest: {
       id: appInfo.id,
