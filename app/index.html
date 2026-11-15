@@ -9,8 +9,11 @@
   <div id="app">
     <header>
       <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r="30" fill="#ffb347"/>
-        <circle cx="44" cy="22" r="24" fill="#14111f"/>
+        <mask id="moonCut">
+          <rect width="64" height="64" fill="#fff"/>
+          <circle cx="44" cy="22" r="24" fill="#000"/>
+        </mask>
+        <circle cx="32" cy="32" r="30" fill="#ffb347" mask="url(#moonCut)"/>
       </svg>
       <h1>NightLight</h1>
       <span class="sub">Eye Comfort scheduler</span>
