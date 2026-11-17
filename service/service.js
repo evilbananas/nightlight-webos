@@ -31,7 +31,9 @@ var luna = {
 
 var controller = new Controller({
   luna: luna,
-  store: new Store(),
+  // Without root the service runs in a jail with its own empty /home/root, which would
+  // pass the store's checks but hide the real config.
+  store: new Store(isRoot() ? Store.CONFIG_DIR : null),
   resolveTimezone: function (tz) { return tzlocation.resolve(tz); },
   log: log
 });

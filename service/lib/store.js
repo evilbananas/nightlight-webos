@@ -2,8 +2,8 @@
 var fs = require('fs');
 var path = require('path');
 
-// Prefer a location outside the app directory so settings survive app updates.
-var CANDIDATE_DIRS = ['/home/root/.config/nightlight-webos', path.join(__dirname, '..', 'data')];
+// Outside the app directory so settings survive app updates.
+var CONFIG_DIR = '/home/root/.config/nightlight-webos';
 
 function mkdirp(dir) {
   if (fs.existsSync(dir)) return;
@@ -11,22 +11,22 @@ function mkdirp(dir) {
   fs.mkdirSync(dir);
 }
 
-function pickFile(dirs) {
-  for (var i = 0; i < dirs.length; i++) {
-    try {
-      mkdirp(dirs[i]);
-      fs.accessSync(dirs[i], fs.W_OK);
-      return path.join(dirs[i], 'config.json');
-    } catch (e) {
-      // try next candidate
-    }
+function pickFile(dir) {
+  try {
+    mkdirp(dir);
+    fs.accessSync(dir, fs.W_OK);
+    return path.join(dir, 'config.json');
+  } catch (e) {
+    return null;
   }
-  return null;
 }
 
-function Store(dirs) {
-  this.file = pickFile(dirs || CANDIDATE_DIRS);
+/** Without a `dir`, the store is unavailable and loads and saves nothing. */
+function Store(dir) {
+  this.file = dir ? pickFile(dir) : null;
 }
+
+Store.CONFIG_DIR = CONFIG_DIR;
 
 /** False when no config directory can be used, e.g. before the service has root. */
 Store.prototype.available = function () {
