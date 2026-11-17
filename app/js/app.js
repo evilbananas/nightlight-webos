@@ -35,6 +35,42 @@
     toast.t = setTimeout(function () { el.classList.remove('show'); }, 3500);
   }
 
+  // Values too long for their cell scroll to the end, pause, and jump back. Unchanged text is
+  // skipped so the 5 s poll doesn't restart a running scroll. Speed is in rem so it looks the same
+  // at any resolution, since the layout scales with the viewport.
+  var SCROLL_REM_PER_S = 2;
+  var SCROLL_PAUSE_MS = 2500;
+
+  function setFact(id, text) {
+    var el = $(id);
+    if (el.getAttribute('data-text') === text) return;
+    el.setAttribute('data-text', text);
+    clearTimeout(el.scrollTimer);
+    el.classList.remove('scrolling');
+    el.textContent = '';
+    var span = document.createElement('span');
+    span.textContent = text;
+    el.appendChild(span);
+
+    var dist = el.scrollWidth - el.clientWidth;
+    if (dist <= 0) return;
+    el.classList.add('scrolling');
+    var remPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    var ms = Math.round(dist / (SCROLL_REM_PER_S * remPx) * 1000);
+    function move(x, dur) {
+      span.style.webkitTransition = dur ? '-webkit-transform ' + dur + 'ms linear' : 'none';
+      span.style.transition = dur ? 'transform ' + dur + 'ms linear' : 'none';
+      span.style.webkitTransform = span.style.transform = 'translateX(' + x + 'px)';
+    }
+    (function loop() {
+      move(0, 0);
+      el.scrollTimer = setTimeout(function () {
+        move(-dist, ms);
+        el.scrollTimer = setTimeout(loop, ms + SCROLL_PAUSE_MS);
+      }, SCROLL_PAUSE_MS);
+    })();
+  }
+
   // ---- formatting --------------------------------------------------------
 
   function duration(min) {
@@ -110,16 +146,16 @@
     $('next').textContent = next;
 
     var today = sched.today || {};
-    $('localTime').textContent = displayTime(status.clock.local);
-    $('timezone').textContent = status.clock.timezone || '—';
-    $('sunrise').textContent = displayTime(today.sunrise);
-    $('sunset').textContent = displayTime(today.sunset);
-    $('onAt').textContent = displayTime(today.onAt);
-    $('offAt').textContent = displayTime(today.offAt);
-    $('locationText').textContent = ready ? locationText(status.location) : '—';
-    $('rootText').textContent = status.elevated
+    setFact('localTime', displayTime(status.clock.local));
+    setFact('timezone', status.clock.timezone || '—');
+    setFact('sunrise', displayTime(today.sunrise));
+    setFact('sunset', displayTime(today.sunset));
+    setFact('onAt', displayTime(today.onAt));
+    setFact('offAt', displayTime(today.offAt));
+    setFact('locationText', ready ? locationText(status.location) : '—');
+    setFact('rootText', status.elevated
       ? 'Yes' + (status.autostartInstalled ? ', starts at boot' : '')
-      : elevateState === 'running' ? 'Requesting…' : 'No';
+      : elevateState === 'running' ? 'Requesting…' : 'No');
     $('version').textContent = 'v' + status.version;
 
     if (!status.elevated && elevateState === 'failed') {

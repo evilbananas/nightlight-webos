@@ -67,6 +67,8 @@ main {
 }
 .facts dt { width: 42%; color: #a99fbd; margin: 0 0 0.45rem; }
 .facts dd { width: 58%; margin: 0 0 0.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.facts dd.scrolling { text-overflow: clip; }
+.facts dd.scrolling span { display: inline-block; }
 
 /* Alerts get whatever space is left under the buttons and never push them around. */
 .alerts {
