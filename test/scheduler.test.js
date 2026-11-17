@@ -78,6 +78,28 @@ test('sun mode during polar night stays on with no next transition', () => {
   assert.strictEqual(r.today.polar, 'night');
 });
 
+const OSLO = { latitude: 59.9139, longitude: 10.7522 };
+
+test('sun mode stays off when offsets close a short summer night', () => {
+  // Night is ~5 h: sunset +180 turns on at ~01:44, after sunrise -180 turns off at ~00:53 (UTC+2).
+  const c = cfg({ sunsetOffset: 180, sunriseOffset: -180 });
+  for (const iso of ['2024-06-21T00:00:00Z', '2024-06-21T10:00:00Z']) {
+    const r = schedule.evaluate(c, OSLO, Date.parse(iso), 120);
+    assert.strictEqual(r.desired, false, iso);
+    assert.strictEqual(r.next, undefined, iso);
+  }
+});
+
+test('sun mode stays on when offsets close a short winter day', () => {
+  // Day is ~6 h: sunrise +180 turns off at ~12:18, after sunset -180 turns on at ~12:12 (UTC+1).
+  const c = cfg({ sunsetOffset: -180, sunriseOffset: 180 });
+  for (const iso of ['2024-12-21T11:30:00Z', '2024-12-21T20:00:00Z']) {
+    const r = schedule.evaluate(c, OSLO, Date.parse(iso), 60);
+    assert.strictEqual(r.desired, true, iso);
+    assert.strictEqual(r.next, undefined, iso);
+  }
+});
+
 test('sun mode without location reports an error', () => {
   const r = schedule.evaluate(cfg(), null, Date.now(), 0);
   assert.strictEqual(r.ok, false);

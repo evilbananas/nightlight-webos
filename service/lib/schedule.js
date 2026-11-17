@@ -90,6 +90,26 @@ function eventsForDay(config, dayStart, t) {
 }
 
 /**
+ * Sun-mode events in day order, minus empty intervals. Large offsets can move an "on"
+ * past the next "off" (short nights) or an "off" past the next "on" (short days). The
+ * interval between them is then empty, so both are dropped and the earlier state
+ * continues. Events that don't change the state are dropped too.
+ */
+function dropEmptyIntervals(events) {
+  var out = [];
+  for (var i = 0; i < events.length; i++) {
+    var e = events[i];
+    var last = out[out.length - 1];
+    if (last && e.at <= last.at && last.on !== e.on) {
+      out.pop();
+      last = out[out.length - 1];
+    }
+    if (!last || (last.on !== e.on && e.at > last.at)) out.push(e);
+  }
+  return out;
+}
+
+/**
  * Evaluates the schedule at `now`. `location` is the {latitude, longitude} used in sun mode.
  * @returns {{ok: boolean, error?: string, desired?: boolean, next?: object, today?: object}}
  */
@@ -103,15 +123,20 @@ function evaluate(config, location, now, offsetMin) {
   var today = localDayStart(now, offsetMin);
   var events = [];
   var todaySun = null;
-  for (var i = -1; i <= 1; i++) {
+  // Day 2 is only there to cancel day 1's last event if their interval is empty.
+  for (var i = -1; i <= 2; i++) {
     var dayStart = today + i * DAY_MS;
     var t = config.mode === 'sun'
       ? sun.getSunTimes(dayStart + DAY_MS / 2, location.latitude, location.longitude)
       : null;
     if (i === 0) todaySun = t;
-    events = events.concat(eventsForDay(config, dayStart, t));
+    var dayEvents = eventsForDay(config, dayStart, t);
+    for (var k = 0; k < dayEvents.length; k++) dayEvents[k].lookahead = i === 2;
+    events = events.concat(dayEvents);
   }
-  events.sort(function (a, b) { return a.at - b.at; });
+  if (config.mode === 'sun') events = dropEmptyIntervals(events);
+  else events.sort(function (a, b) { return a.at - b.at; });
+  events = events.filter(function (e) { return !e.lookahead; });
 
   var current = null;
   var j;
