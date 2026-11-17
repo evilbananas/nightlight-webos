@@ -30,7 +30,7 @@ npm test
 CI runs the tests and builds the package on every push to `main` and on pull requests.
 
 To work on the UI without a TV, open `app/index.html` in a desktop browser. When there's no Luna bus, the app uses
-the stand-in in `app/js/mock.js`.
+the stand-in in `app/js/mock.js`, which `npm run package` leaves out of the `.ipk`.
 
 ## Building and installing on a TV
 

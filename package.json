@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "package": "ares-package app service -o dist",
+    "package": "ares-package app service -o dist -e mock.js",
     "preversion": "npm test",
     "version": "node tools/set-version.js && git add app/appinfo.json service/package.json",
     "postversion": "git push --follow-tags",

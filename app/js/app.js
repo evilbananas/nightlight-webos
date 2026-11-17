@@ -1,4 +1,5 @@
 (function () {
+  // Also in service/package.json (name) and service/lib/autostart.js (ELEVATE).
   var SERVICE_ID = 'org.nightlightwebos.app.service';
   var SERVICE = 'luna://' + SERVICE_ID + '/';
   var HBCHANNEL_EXEC = 'luna://org.webosbrew.hbchannel.service/exec';

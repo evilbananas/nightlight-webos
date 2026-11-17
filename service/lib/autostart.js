@@ -3,6 +3,7 @@ var fs = require('fs');
 
 // Homebrew Channel runs every executable in this directory at boot (rooted TVs only).
 var INIT_DIR = '/var/lib/webosbrew/init.d';
+// Also in app/js/app.js, which runs it when the app opens.
 var ELEVATE = '/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service';
 
 function scriptPath(serviceId) {
