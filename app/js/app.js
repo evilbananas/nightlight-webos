@@ -110,7 +110,8 @@
     $('next').textContent = next;
 
     var today = sched.today || {};
-    $('localTime').textContent = displayTime(status.clock.local) + (status.clock.timezone ? ' (' + status.clock.timezone + ')' : '');
+    $('localTime').textContent = displayTime(status.clock.local);
+    $('timezone').textContent = status.clock.timezone || '—';
     $('sunrise').textContent = displayTime(today.sunrise);
     $('sunset').textContent = displayTime(today.sunset);
     $('onAt').textContent = displayTime(today.onAt);
