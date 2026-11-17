@@ -138,6 +138,26 @@ test('controller retries after a failed write and re-applies on config change', 
   assert.deepStrictEqual(setCalls(calls), ['on', 'on', 'on', 'off']);
 });
 
+test('controller drops unknown config keys when loading and saving', () => {
+  let saved = { mode: 'manual', timeFormat: '12h' };
+  const c = new Controller({
+    store: { load: () => saved, save: (d) => { saved = d; } },
+    luna: { call: (uri, params, cb) => cb(null, {}) }
+  });
+  assert.strictEqual(c.config.mode, 'manual');
+  assert.strictEqual(c.updateConfig({ enabled: false, bogus: 1 }), null);
+  assert.ok(!('timeFormat' in saved) && !('bogus' in saved));
+});
+
+test('controller reports a failed save and keeps the previous config', () => {
+  const c = new Controller({
+    store: { load: () => null, save: () => { throw new Error('ENOSPC'); } },
+    luna: { call: (uri, params, cb) => cb(null, {}) }
+  });
+  assert.match(c.updateConfig({ mode: 'manual' }), /ENOSPC/);
+  assert.strictEqual(c.config.mode, 'sun');
+});
+
 test('controller stays idle and rejects changes when the config store is unavailable', () => {
   const calls = [];
   const c = new Controller({

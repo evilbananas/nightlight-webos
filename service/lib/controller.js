@@ -18,6 +18,16 @@ function assign(target) {
   return target;
 }
 
+/** Copies only keys that exist in the default config, so stale or unknown keys aren't kept. */
+function pickKnown(src) {
+  var out = {};
+  if (!src) return out;
+  for (var k in schedule.DEFAULT_CONFIG) {
+    if (Object.prototype.hasOwnProperty.call(src, k)) out[k] = src[k];
+  }
+  return out;
+}
+
 /**
  * Scheduler state machine. Platform specifics are injected:
  *  - luna.call(uri, params, cb(err, payload))
@@ -36,7 +46,7 @@ function Controller(opts) {
   this.log = opts.log || function () {};
   // Without the saved config we'd schedule with defaults, so stay idle until restarted with access.
   this.configAvailable = !(this.store && this.store.available && !this.store.available());
-  this.config = assign(clone(schedule.DEFAULT_CONFIG), (this.store && this.store.load()) || {});
+  this.config = assign(clone(schedule.DEFAULT_CONFIG), pickKnown(this.store && this.store.load()));
   this.offset = null; // UTC offset in minutes reported by the TV; null = use process timezone
   this.timezone = null;
   this.tzLocation = null; // coordinates of the TV's timezone reference city
@@ -125,7 +135,7 @@ Controller.prototype.refreshTvState = function (cb) {
 /** Merges `patch` into the config. Returns an error string or null. */
 Controller.prototype.updateConfig = function (patch) {
   if (!this.configAvailable) return 'Settings can\'t be read or saved until the service has root access';
-  var next = assign(clone(this.config), patch || {});
+  var next = assign(clone(this.config), pickKnown(patch));
   next.enabled = !!next.enabled;
   next.autostart = !!next.autostart;
   next.sunsetOffset = Number(next.sunsetOffset);
@@ -139,8 +149,15 @@ Controller.prototype.updateConfig = function (patch) {
   }
   var err = schedule.validateConfig(next);
   if (err) return err;
+  if (this.store) {
+    try {
+      this.store.save(next);
+    } catch (e) {
+      this.log('Failed to save settings: ' + e.message);
+      return 'Could not save settings: ' + e.message;
+    }
+  }
   this.config = next;
-  if (this.store) this.store.save(this.config);
   // Force re-applying the schedule with the new settings.
   this.lastDesired = null;
   this.tick();

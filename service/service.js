@@ -64,10 +64,7 @@ function fail(message, text) {
 }
 
 // Keep the service process alive; webOS otherwise stops idle JS services.
-var keepAlive = null;
-service.activityManager.create('keepAlive', function (activity) {
-  keepAlive = activity;
-});
+service.activityManager.create('keepAlive');
 
 var clockSub = service.subscribe('luna://com.palm.systemservice/time/getSystemTime', { subscribe: true });
 clockSub.on('response', function (msg) {
