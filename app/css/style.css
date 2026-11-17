@@ -53,47 +53,48 @@ main {
 .loading-text { display: none; margin: 0; font-size: 1.3rem; color: #a99fbd; }
 .settings-card.loading > .loading-text { display: block; }
 
-.state-label { color: #a99fbd; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
-.state { font-size: 4.4rem; font-weight: 700; margin: 0.3rem 0 0.4rem; color: #8a8199; }
+.caption { color: #a99fbd; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.card-top {
+  display: -webkit-flex; display: flex;
+  -webkit-align-items: center; align-items: center;
+  -webkit-justify-content: space-between; justify-content: space-between;
+}
+.badge {
+  font-size: 1rem;
+  padding: 0.25rem 0.8rem;
+  border-radius: 0.6rem;
+  color: #ffb347;
+  background: rgba(255, 179, 71, 0.14);
+  border: 1px solid rgba(255, 179, 71, 0.5);
+}
+.badge.muted { color: #a99fbd; background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); }
+
+.state-row {
+  display: -webkit-flex; display: flex;
+  -webkit-align-items: center; align-items: center;
+  margin: 0.3rem 0 0.2rem;
+}
+.state { font-size: 4.4rem; font-weight: 700; margin-right: 1.2rem; line-height: 1.1; color: #8a8199; }
 .state.on { color: #ffb347; text-shadow: 0 0 2rem rgba(255, 179, 71, 0.45); }
 .state.off { color: #9ec9ff; }
-.next { font-size: 1.3rem; color: #d6cfe4; min-height: 1.8rem; }
+.next-box { -webkit-flex: 1; flex: 1; min-width: 0; }
+.next { font-size: 1.3rem; color: #d6cfe4; margin-top: 0.2rem; }
 
-.facts {
-  display: -webkit-flex; display: flex;
-  -webkit-flex-wrap: wrap; flex-wrap: wrap;
-  margin: 1.2rem 0 0.8rem;
-  font-size: 1.2rem;
-}
-.facts dt { width: 42%; color: #a99fbd; margin: 0 0 0.45rem; }
-.facts dd { width: 58%; margin: 0 0 0.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.facts dd.scrolling { text-overflow: clip; }
-.facts dd.scrolling span { display: inline-block; }
+.section { border-top: 1px solid rgba(255, 255, 255, 0.08); margin-top: 1.1rem; padding-top: 1.1rem; }
+.times { display: -webkit-flex; display: flex; }
+.times > div { -webkit-flex: 1; flex: 1; }
+.big-value { font-size: 1.6rem; font-weight: 600; margin-top: 0.3rem; }
+.detail { font-size: 1rem; color: #a99fbd; margin-top: 0.2rem; }
 
-/* Alerts get whatever space is left under the buttons and never push them around. */
-.alerts {
-  -webkit-flex: 1; flex: 1;
-  min-height: 0;
-  margin-top: 1rem;
-  overflow: hidden;
-}
-.alert {
-  border-radius: 0.6rem;
-  padding: 0.7rem 1rem;
-  margin-bottom: 0.7rem;
-  font-size: 1.05rem;
-  line-height: 1.35;
-  background: rgba(255, 179, 71, 0.12);
-  border-left: 0.3rem solid #ffb347;
-}
-.alert span {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  max-height: 2.7em;
-}
-.alert.error { background: rgba(255, 99, 99, 0.12); border-left-color: #ff6b6b; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Status text that scrolls when too long; see setStatusText() in app.js. */
+.marquee { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marquee.scrolling { text-overflow: clip; }
+.marquee.scrolling span { display: inline-block; }
+
+.spacer { -webkit-flex: 1; flex: 1; min-height: 1rem; }
+.note { margin: 0.7rem 0 0; font-size: 1rem; color: #a99fbd; text-align: center; }
 
 h2 {
   margin: 1rem 0 0.4rem;
@@ -104,6 +105,7 @@ h2 {
   letter-spacing: 0.1em;
 }
 h2:first-child, .loading-text + h2 { margin-top: 0; }
+.setting + h2 { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1rem; }
 
 .setting {
   display: -webkit-flex; display: flex;
@@ -113,6 +115,7 @@ h2:first-child, .loading-text + h2 { margin-top: 0; }
 }
 .setting .label { width: 13rem; font-size: 1.35rem; -webkit-flex-shrink: 0; flex-shrink: 0; }
 .value-text { font-size: 1.25rem; margin-right: 1.2rem; color: #d6cfe4; }
+.value-stack { min-width: 0; }
 
 .buttons { display: -webkit-flex; display: flex; }
 .buttons .btn { -webkit-flex: 1; flex: 1; }
@@ -140,6 +143,8 @@ h2:first-child, .loading-text + h2 { margin-top: 0; }
   cursor: pointer;
 }
 .btn[disabled] { opacity: 0.5; }
+.btn.primary { background: #ffb347; color: #1b1426; font-weight: 600; }
+.btn.primary.focused { background: #ffc46b; border-color: #fff1d6; }
 
 .seg {
   display: -webkit-flex; display: flex;
@@ -184,7 +189,34 @@ footer {
   color: #6f6585;
   font-size: 1.05rem;
 }
-footer > span { margin-right: 2.2rem; }
+.status-bar {
+  display: -webkit-flex; display: flex;
+  -webkit-align-items: center; align-items: center;
+  -webkit-flex: 1; flex: 1;
+  min-width: 0;
+  margin-right: 2.5rem;
+  color: #a99fbd;
+}
+.dot {
+  width: 0.7rem; height: 0.7rem;
+  border-radius: 50%;
+  margin-right: 0.7rem;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+  background: #6f6585;
+}
+.status-text { -webkit-flex: 1; flex: 1; min-width: 0; }
+.status-bar.ok .dot { background: #6fd08c; }
+.status-bar.warn .dot { background: #ffb347; }
+.status-bar.warn { color: #ffcf8a; }
+.status-bar.error .dot { background: #ff6b6b; }
+.status-bar.error { color: #ff9a9a; }
+
+/* A toast temporarily replaces the status text. */
+.toast { display: none; color: #ffb347; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-bar.toasting .status-text { display: none; }
+.status-bar.toasting .toast { display: block; }
+.status-bar.toasting .dot { background: #ffb347; }
+
+.hints { white-space: nowrap; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.hints > span + span { margin-left: 1.8rem; }
 footer b { color: #a99fbd; }
-.toast { margin-left: auto; margin-right: 0 !important; color: #ffb347; opacity: 0; -webkit-transition: opacity 0.3s; transition: opacity 0.3s; }
-.toast.show { opacity: 1; }

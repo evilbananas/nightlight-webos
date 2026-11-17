@@ -28,21 +28,28 @@
   function hasPending() { for (var k in pending) return true; return false; }
 
   function toast(text) {
-    var el = $('toast');
-    el.textContent = text;
-    el.classList.add('show');
+    var bar = $('statusBar');
+    $('toast').textContent = text;
+    bar.classList.add('toasting');
     clearTimeout(toast.t);
-    toast.t = setTimeout(function () { el.classList.remove('show'); }, 3500);
+    toast.t = setTimeout(function () {
+      bar.classList.remove('toasting');
+      // The status text was hidden, so re-measure it in case it needs to scroll.
+      var el = $('statusText');
+      var text = el.getAttribute('data-text');
+      el.removeAttribute('data-text');
+      setStatusText(text || '');
+    }, 3500);
   }
 
-  // Values too long for their cell scroll to the end, pause, and jump back. Unchanged text is
-  // skipped so the 5 s poll doesn't restart a running scroll. Speed is in rem so it looks the same
-  // at any resolution, since the layout scales with the viewport.
+  // Status text too long for the footer scrolls to the end, pauses, and jumps back. Unchanged text
+  // is skipped so the 5 s poll doesn't restart a running scroll. Speed is in rem so it looks the
+  // same at any resolution, since the layout scales with the viewport.
   var SCROLL_REM_PER_S = 2;
   var SCROLL_PAUSE_MS = 2500;
 
-  function setFact(id, text) {
-    var el = $(id);
+  function setStatusText(text) {
+    var el = $('statusText');
     if (el.getAttribute('data-text') === text) return;
     el.setAttribute('data-text', text);
     clearTimeout(el.scrollTimer);
@@ -107,78 +114,104 @@
     return (h % 12 || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
   }
 
-  function locationText(loc) {
-    if (!loc || loc.latitude === null || loc.latitude === undefined) return 'Not set';
-    var coords = loc.latitude.toFixed(2) + ', ' + loc.longitude.toFixed(2);
-    var text = loc.label ? loc.label + ' (' + coords + ')' : coords;
-    return loc.source ? text + (loc.source === 'tv' ? ' · TV timezone' : ' · manual') : text;
+  function coordsText(loc) {
+    return loc.latitude.toFixed(4) + ', ' + loc.longitude.toFixed(4);
+  }
+
+  function hasCoords(loc) {
+    return loc && loc.latitude !== null && loc.latitude !== undefined;
   }
 
   // ---- rendering ---------------------------------------------------------
 
+  function setBadge(text, kind) {
+    var el = $('badge');
+    el.textContent = text || '';
+    el.className = 'badge' + (kind ? ' ' + kind : '') + (text ? '' : ' hidden');
+  }
+
   function renderStatus() {
     var stateEl = $('state');
-    var alerts = [];
 
     if (!status) {
       stateEl.textContent = '—';
       stateEl.className = 'state';
       $('next').textContent = serviceError ? 'Service unavailable' : 'Connecting to service…';
-      if (serviceError) alerts.push({ error: true, text: serviceError });
-      renderAlerts(alerts);
+      setBadge(null);
+      renderStatusBar(serviceError ? 'error' : 'idle',
+        serviceError ? 'Service unavailable: ' + serviceError : 'Connecting to service…');
       return;
     }
 
     var tv = status.eyeComfort.tv;
-    stateEl.textContent = tv === true ? 'ON' : tv === false ? 'OFF' : 'Unknown';
+    stateEl.textContent = tv === true ? 'ON' : tv === false ? 'OFF' : '?';
     stateEl.className = 'state' + (tv === true ? ' on' : tv === false ? ' off' : '');
+    $('toggleBtn').textContent = tv === true ? 'Turn off now' : 'Turn on now';
 
     var sched = status.schedule || {};
     var ready = status.configAvailable !== false;
+    var la = status.eyeComfort.lastApply;
     var next;
-    if (!ready) next = 'Waiting for root access to load your settings…';
-    else if (!status.config.enabled) next = 'Scheduler is off';
+    if (!ready) next = 'Waiting for root access…';
+    else if (!status.config.enabled) next = 'None, scheduler is off';
     else if (!sched.ok) next = 'Not scheduled';
-    else if (sched.next) next = 'Turns ' + (sched.next.on ? 'on' : 'off') + ' at ' + displayTime(sched.next.local) + ' · in ' + duration(sched.next.inMinutes);
-    else if (sched.today && sched.today.polar === 'night') next = 'Polar night: on all day';
-    else if (sched.today && sched.today.polar === 'day') next = 'Midnight sun: off all day';
-    else next = '';
+    else if (sched.next) next = (sched.next.on ? 'On' : 'Off') + ' at ' + displayTime(sched.next.local) + ' · in ' + duration(sched.next.inMinutes);
+    else if (sched.today && sched.today.polar === 'night') next = 'None, polar night: on all day';
+    else if (sched.today && sched.today.polar === 'day') next = 'None, midnight sun: off all day';
+    else next = '—';
     $('next').textContent = next;
 
+    if (!ready) setBadge(null);
+    else if (!status.config.enabled) setBadge('Scheduler off', 'muted');
+    else if (la && la.ok && la.reason === 'manual' && tv === la.on) setBadge('Manual');
+    else if (sched.ok) setBadge('Scheduled');
+    else setBadge(null);
+
     var today = sched.today || {};
-    setFact('localTime', displayTime(status.clock.local));
-    setFact('timezone', status.clock.timezone || '—');
-    setFact('sunrise', displayTime(today.sunrise));
-    setFact('sunset', displayTime(today.sunset));
-    setFact('onAt', displayTime(today.onAt));
-    setFact('offAt', displayTime(today.offAt));
-    setFact('locationText', ready ? locationText(status.location) : '—');
-    setFact('rootText', status.elevated
-      ? 'Yes' + (status.autostartInstalled ? ', starts at boot' : '')
-      : elevateState === 'running' ? 'Requesting…' : 'No');
+    $('onAt').textContent = ready && sched.ok ? displayTime(today.onAt) : '—';
+    $('offAt').textContent = ready && sched.ok ? displayTime(today.offAt) : '—';
+
+    var loc = status.location;
+    if (ready && hasCoords(loc)) {
+      $('locationName').textContent = loc.label || coordsText(loc);
+      $('locationDetail').textContent = (loc.label ? coordsText(loc) + ' · ' : '') + (loc.source === 'tv' ? 'TV timezone' : 'Manual coordinates');
+    } else {
+      $('locationName').textContent = ready && loc && loc.error ? 'Not set' : '—';
+      $('locationDetail').textContent = ready && loc && loc.error ? loc.error : '';
+    }
     $('version').textContent = 'v' + status.version;
 
-    if (!status.elevated && elevateState === 'failed') {
-      alerts.push({ text: 'No root access, so the schedule won\'t start after a reboot until you open this app. Homebrew Channel said: ' + elevateError });
+    var problems = [];
+    var level = 'ok';
+    function problem(text, isError) {
+      problems.push(text);
+      if (isError) level = 'error';
+      else if (level !== 'error') level = 'warn';
     }
-    if (ready && status.config.enabled && sched.error) alerts.push({ error: true, text: sched.error });
-    var la = status.eyeComfort.lastApply;
-    if (la && !la.ok) alerts.push({ error: true, text: 'Could not change Eye Comfort Mode: ' + la.error });
-    if (status.warning) alerts.push({ text: status.warning });
-    renderAlerts(alerts);
+    if (!status.elevated && elevateState === 'failed') {
+      problem('No root access, so the schedule won\'t start after a reboot until you open this app. Homebrew Channel said: ' + elevateError);
+    }
+    if (ready && status.config.enabled && sched.error) problem(sched.error, true);
+    if (la && !la.ok) problem('Could not change Eye Comfort Mode: ' + la.error, true);
+    if (status.warning) problem(status.warning);
+
+    if (problems.length) {
+      renderStatusBar(level, problems.join(' · '));
+      return;
+    }
+
+    if (!status.elevated) {
+      level = 'warn';
+      renderStatusBar(level, elevateState === 'running' ? 'Requesting root access…' : 'No root access');
+      return;
+    }
+    renderStatusBar(level, 'Running');
   }
 
-  function renderAlerts(alerts) {
-    var box = $('alerts');
-    box.innerHTML = '';
-    alerts.forEach(function (a) {
-      var div = document.createElement('div');
-      div.className = 'alert' + (a.error ? ' error' : '');
-      var span = document.createElement('span');
-      span.textContent = a.text;
-      div.appendChild(span);
-      box.appendChild(div);
-    });
+  function renderStatusBar(level, text) {
+    var bar = $('statusBar');
+    ['idle', 'ok', 'warn', 'error'].forEach(function (l) { bar.classList.toggle(l, l === level); });
+    setStatusText(text);
   }
 
   function renderSettings() {
@@ -206,9 +239,10 @@
     qsa('.loc-manual').forEach(function (el) { el.classList.toggle('hidden', draft.locationSource !== 'manual'); });
 
     var tzLoc = status && status.location ? status.location.timezoneLocation : null;
-    $('tzLocationText').textContent = tzLoc
-      ? locationText(tzLoc)
+    $('tzLocationName').textContent = tzLoc
+      ? tzLoc.label || coordsText(tzLoc)
       : status && status.clock.timezone ? 'Unknown for ' + status.clock.timezone : '—';
+    $('tzLocationDetail').textContent = tzLoc && tzLoc.label ? coordsText(tzLoc) : '';
 
     // Prefill manual coordinates from the timezone location when none are saved yet.
     var loc = draft.location || tzLoc;
@@ -400,8 +434,7 @@
       return;
     }
     switch (el.getAttribute('data-action')) {
-      case 'turn-on': setEyeComfort(true); break;
-      case 'turn-off': setEyeComfort(false); break;
+      case 'toggle': if (status) setEyeComfort(status.eyeComfort.tv !== true); break;
       case 'save-coords': saveCoords(); break;
     }
   }

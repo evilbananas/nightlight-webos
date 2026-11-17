@@ -20,27 +20,40 @@
 
     <main>
       <section class="card status-card">
-        <div class="state-label">Eye Comfort Mode</div>
-        <div id="state" class="state">—</div>
-        <div id="next" class="next">Connecting to service…</div>
-
-        <dl class="facts">
-          <dt>Local time</dt><dd id="localTime">—</dd>
-          <dt>Timezone</dt><dd id="timezone">—</dd>
-          <dt>Sunrise</dt><dd id="sunrise">—</dd>
-          <dt>Sunset</dt><dd id="sunset">—</dd>
-          <dt>Turns on</dt><dd id="onAt">—</dd>
-          <dt>Turns off</dt><dd id="offAt">—</dd>
-          <dt>Location</dt><dd id="locationText">—</dd>
-          <dt>Root access</dt><dd id="rootText">—</dd>
-        </dl>
-
-        <div class="nav-row buttons">
-          <button class="focusable btn" data-action="turn-on">Turn on now</button>
-          <button class="focusable btn" data-action="turn-off">Turn off now</button>
+        <div class="card-top">
+          <span class="caption">Eye Comfort Mode</span>
+          <span id="badge" class="badge hidden"></span>
+        </div>
+        <div class="state-row">
+          <div id="state" class="state">—</div>
+          <div class="next-box">
+            <div class="caption">Next change</div>
+            <div id="next" class="next">Connecting to service…</div>
+          </div>
         </div>
 
-        <div id="alerts" class="alerts"></div>
+        <div class="section times">
+          <div>
+            <div class="caption">Scheduled on</div>
+            <div id="onAt" class="big-value">—</div>
+          </div>
+          <div>
+            <div class="caption">Scheduled off</div>
+            <div id="offAt" class="big-value">—</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="caption">Location</div>
+          <div id="locationName" class="big-value ellipsis">—</div>
+          <div id="locationDetail" class="detail"></div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="nav-row buttons">
+          <button class="focusable btn primary" id="toggleBtn" data-action="toggle">Turn on now</button>
+        </div>
+        <p class="note">Manual changes last until the next scheduled change.</p>
       </section>
 
       <section class="card settings-card loading" id="settings">
@@ -92,7 +105,10 @@
         </div>
         <div class="nav-row setting loc-tv">
           <span class="label">From timezone</span>
-          <span id="tzLocationText" class="value-text">—</span>
+          <div class="value-stack">
+            <div id="tzLocationName" class="value-text">—</div>
+            <div id="tzLocationDetail" class="detail"></div>
+          </div>
         </div>
         <div class="nav-row setting coords loc-manual">
           <span class="label">Coordinates</span>
@@ -112,8 +128,14 @@
     </main>
 
     <footer>
-      <span><b>▲▼</b> Navigate</span><span><b>◀▶</b> Change</span><span><b>OK</b> Select</span><span><b>BACK</b> Exit</span>
-      <span id="toast" class="toast"></span>
+      <div id="statusBar" class="status-bar">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText" class="status-text marquee">Connecting to service…</span>
+        <span id="toast" class="toast"></span>
+      </div>
+      <div class="hints">
+        <span><b>▲▼</b> Navigate</span><span><b>◀▶</b> Change</span><span><b>OK</b> Select</span><span><b>BACK</b> Exit</span>
+      </div>
     </footer>
   </div>
 
