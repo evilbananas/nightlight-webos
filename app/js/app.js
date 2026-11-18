@@ -285,7 +285,6 @@
     Luna.call(SERVICE + 'getStatus', {}, function (res) { onStatus(res, true); });
   }
 
-  // Keeps the current format if the preference can't be read.
   function loadTimeFormat() {
     Luna.call(SYSTEM_PREFS, { keys: ['timeFormat'] }, function (res) {
       if (!res.returnValue || (res.timeFormat !== 'HH12' && res.timeFormat !== 'HH24')) return;
@@ -316,7 +315,6 @@
     Luna.call(SERVICE + 'setConfig', { config: patch }, function (res) {
       saving = false;
       if (!onStatus(res)) {
-        // Roll the UI back to what the service has.
         if (status) draft = status.configAvailable === false ? null : clone(status.config);
         render();
       } else {

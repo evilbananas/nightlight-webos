@@ -74,7 +74,6 @@ Controller.prototype.setClock = function (offsetMin, timezone) {
   if (changed) this.tick();
 };
 
-/** Coordinates used for sunrise/sunset, or null. */
 Controller.prototype.effectiveLocation = function () {
   if (this.config.locationSource === 'manual') return this.config.location;
   return this.tzLocation;
@@ -132,7 +131,7 @@ Controller.prototype.refreshTvState = function (cb) {
   });
 };
 
-/** Merges `patch` into the config. Returns an error string or null. */
+/** Returns an error string or null. */
 Controller.prototype.updateConfig = function (patch) {
   if (!this.configAvailable) return 'Settings can\'t be read or saved until the service has root access';
   var next = assign(clone(this.config), pickKnown(patch));

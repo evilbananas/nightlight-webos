@@ -211,7 +211,6 @@ footer {
 .status-bar.error .dot { background: #ff6b6b; }
 .status-bar.error { color: #ff9a9a; }
 
-/* A toast temporarily replaces the status text. */
 .toast { display: none; color: #ffb347; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-bar.toasting .status-text { display: none; }
 .status-bar.toasting .toast { display: block; }

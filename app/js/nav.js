@@ -76,7 +76,6 @@ var Nav = (function () {
     ensureFocus();
     if (!current) return;
 
-    // While a text field is being edited, only Enter/Up/Down/Back leave it.
     if (isInput(document.activeElement)) {
       if (key === KEY.ENTER || key === KEY.UP || key === KEY.DOWN || key === KEY.BACK || key === KEY.ESC) {
         document.activeElement.blur();

@@ -21,7 +21,6 @@ function pickFile(dir) {
   }
 }
 
-/** Without a `dir`, the store is unavailable and loads and saves nothing. */
 function Store(dir) {
   this.file = dir ? pickFile(dir) : null;
 }
