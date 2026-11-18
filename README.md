@@ -5,7 +5,9 @@ evening and off in the morning. It can follow sunset and sunrise, optionally shi
 fixed on and off times.
 
 Sunrise and sunset are determined from the TV's timezone setting. Since a timezone can cover a large area, you can
-switch Location to Manual in the app and enter your latitude and longitude for better accuracy.
+switch Location to Manual in the app and enter your latitude and longitude for better accuracy. The app shows the name
+of the nearest town next to them. It looks this up on the TV in a list of places from [GeoNames](https://www.geonames.org/)
+(CC BY 4.0), so the coordinates aren't sent anywhere.
 
 ![NightLight app showing Eye Comfort Mode status and schedule settings](docs/screenshot.png)
 
