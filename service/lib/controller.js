@@ -33,6 +33,7 @@ function pickKnown(src) {
  *  - luna.call(uri, params, cb(err, payload))
  *  - store.load() -> object|null, store.save(object)
  *  - resolveTimezone(tzId) -> {latitude, longitude, label} | null
+ *  - nameLocation(latitude, longitude) -> label | null
  *
  * The schedule is edge-triggered: the TV setting is only written when the desired
  * state changes (or on startup / config change), so a manual change made in the
@@ -42,11 +43,24 @@ function Controller(opts) {
   this.luna = opts.luna;
   this.store = opts.store;
   this.resolveTimezone = opts.resolveTimezone;
+  this.nameLocation = opts.nameLocation || function () { return null; };
   this.now = opts.now || Date.now;
   this.log = opts.log || function () {};
   // Without the saved config we'd schedule with defaults, so stay idle until restarted with access.
   this.configAvailable = !(this.store && this.store.available && !this.store.available());
   this.config = assign(clone(schedule.DEFAULT_CONFIG), pickKnown(this.store && this.store.load()));
+  // Coordinates saved before places were named. With no nearby place this runs again on each start.
+  var loc = this.config.location;
+  if (loc && !loc.label) {
+    loc.label = this.nameLocation(loc.latitude, loc.longitude);
+    if (loc.label && this.configAvailable && this.store) {
+      try {
+        this.store.save(this.config);
+      } catch (e) {
+        this.log('Failed to save location name: ' + e.message);
+      }
+    }
+  }
   this.offset = null; // UTC offset in minutes reported by the TV; null = use process timezone
   this.timezone = null;
   this.tzLocation = null; // coordinates of the TV's timezone reference city
@@ -74,7 +88,6 @@ Controller.prototype.setClock = function (offsetMin, timezone) {
   if (changed) this.tick();
 };
 
-/** Coordinates used for sunrise/sunset, or null. */
 Controller.prototype.effectiveLocation = function () {
   if (this.config.locationSource === 'manual') return this.config.location;
   return this.tzLocation;
@@ -132,7 +145,7 @@ Controller.prototype.refreshTvState = function (cb) {
   });
 };
 
-/** Merges `patch` into the config. Returns an error string or null. */
+/** Returns an error string or null. */
 Controller.prototype.updateConfig = function (patch) {
   if (!this.configAvailable) return 'Settings can\'t be read or saved until the service has root access';
   var next = assign(clone(this.config), pickKnown(patch));
@@ -149,6 +162,7 @@ Controller.prototype.updateConfig = function (patch) {
   }
   var err = schedule.validateConfig(next);
   if (err) return err;
+  if (patch && patch.location) next.location.label = this.nameLocation(next.location.latitude, next.location.longitude);
   if (this.store) {
     try {
       this.store.save(next);

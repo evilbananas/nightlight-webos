@@ -8,7 +8,8 @@ This covers building, testing and releasing NightLight. For installing and using
 - `app/` is the web app shown on the TV.
 - `service/` is the background service that switches Eye Comfort Mode on schedule.
 - `test/` has the tests for the scheduling code, run with Node's built-in test runner.
-- `tools/` has scripts for versioning and the Homebrew Channel repo.
+- `tools/` has scripts for versioning and the Homebrew Channel repo, plus `icon.svg`, the source for
+  `app/icon.png` (80x80) and `app/largeIcon.png` (130x130).
 
 ## Setup
 

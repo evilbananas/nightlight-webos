@@ -43,6 +43,7 @@ window.MockLuna = (function () {
         state.autostartInstalled = state.elevated && state.config.autostart;
       } else if (method === 'setEyeComfort') {
         state.eyeComfort.tv = !!params.enabled;
+        state.eyeComfort.lastApply = { on: !!params.enabled, reason: 'manual', at: Date.now(), ok: true, error: null };
       } else if (method === 'exec') {
         state.elevated = true;
         return cb({ returnValue: true, stdoutString: 'elevated' });

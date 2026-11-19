@@ -3,6 +3,7 @@ var Service = require('webos-service');
 var Controller = require('./lib/controller');
 var Store = require('./lib/store');
 var tzlocation = require('./lib/tzlocation');
+var places = require('./lib/places');
 var autostart = require('./lib/autostart');
 var pkg = require('./package.json');
 
@@ -35,6 +36,7 @@ var controller = new Controller({
   // pass the store's checks but hide the real config.
   store: new Store(isRoot() ? Store.CONFIG_DIR : null),
   resolveTimezone: function (tz) { return tzlocation.resolve(tz); },
+  nameLocation: function (lat, lon) { return places.nearest(lat, lon); },
   log: log
 });
 

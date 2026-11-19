@@ -8,6 +8,7 @@ const { getSunTimes } = require('../service/lib/sun');
 const schedule = require('../service/lib/schedule');
 const Controller = require('../service/lib/controller');
 const tzlocation = require('../service/lib/tzlocation');
+const places = require('../service/lib/places');
 
 const MIN = 60000;
 const near = (actual, expectedIso, toleranceMin = 3) => {
@@ -229,6 +230,31 @@ test('controller uses the TV timezone location, and manual coordinates override 
   c.setClock(0, 'Etc/UTC');
   assert.strictEqual(c.lastEval.ok, false);
   assert.match(c.lastEval.error, /Etc\/UTC/);
+});
+
+test('places: nearest town, a city over its own districts, across the antimeridian, and none far out at sea', () => {
+  const text = 'Paris\tFR\t48.853\t2.349\t2138551\nParis 01 Louvre\tFR\t48.859\t2.342\t15114\n' +
+    'Versailles\tFR\t48.804\t2.135\t85416\nLabasa\tFJ\t-16.433\t179.950\t27949\nApia\tWS\t-13.833\t-171.767\t40407\n';
+  assert.strictEqual(places.nearestIn(text, 48.86, 2.34), 'Paris, FR');
+  assert.strictEqual(places.nearestIn(text, 48.80, 2.13), 'Versailles, FR');
+  assert.strictEqual(places.nearestIn(text, -16.4, -179.9), 'Labasa, FJ');
+  assert.strictEqual(places.nearestIn(text, 0, -30), null);
+});
+
+test('controller names manual coordinates when they are saved, and ones saved before naming existed', () => {
+  const nameLocation = (lat, lon) => `${lat}/${lon}`;
+  let saved = { locationSource: 'manual', location: { latitude: 48.86, longitude: 2.34, label: null } };
+  const c = new Controller({
+    nameLocation,
+    store: { load: () => saved, save: (d) => { saved = d; } },
+    luna: { call: (uri, params, cb) => cb(null, {}) }
+  });
+  assert.strictEqual(c.config.location.label, '48.86/2.34');
+  assert.strictEqual(saved.location.label, '48.86/2.34');
+  assert.strictEqual(c.updateConfig({ location: { latitude: 51.5, longitude: -0.12, label: 'stale' } }), null);
+  assert.strictEqual(saved.location.label, '51.5/-0.12');
+  assert.strictEqual(c.updateConfig({ mode: 'manual' }), null);
+  assert.strictEqual(saved.location.label, '51.5/-0.12');
 });
 
 test('timezone location: reads zone.tab first, then zone1970.tab, skipping missing files', (t) => {
