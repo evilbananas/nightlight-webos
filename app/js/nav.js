@@ -4,7 +4,7 @@
 var Nav = (function () {
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 461, ESC: 27 };
   var current = null;
-  var handlers = { adjust: null, back: null };
+  var handlers = { adjust: null, back: null, focus: null };
 
   function visible(el) {
     return el.offsetParent !== null && !el.disabled;
@@ -34,6 +34,7 @@ var Nav = (function () {
     if (current) current.classList.remove('focused');
     current = el;
     el.classList.add('focused');
+    if (handlers.focus) handlers.focus(el);
     if (el.scrollIntoViewIfNeeded) el.scrollIntoViewIfNeeded(false);
     else if (el.scrollIntoView) el.scrollIntoView(false);
   }
@@ -64,7 +65,7 @@ var Nav = (function () {
   }
 
   function isAdjustable(el) {
-    return el.classList.contains('seg') || el.classList.contains('stepper');
+    return el.classList.contains('seg') || el.classList.contains('stepper') || el.classList.contains('slider');
   }
 
   function isInput(el) {
@@ -113,6 +114,7 @@ var Nav = (function () {
   function init(opts) {
     handlers.adjust = opts.adjust;
     handlers.back = opts.back;
+    handlers.focus = opts.focus || null;
     document.addEventListener('keydown', onKey, false);
     // Magic Remote pointer: focus follows the cursor.
     document.addEventListener('mouseover', function (e) {
@@ -123,5 +125,5 @@ var Nav = (function () {
     ensureFocus();
   }
 
-  return { init: init, ensureFocus: ensureFocus, focus: focus };
+  return { init: init, ensureFocus: ensureFocus, focus: focus, current: function () { return current; } };
 })();

@@ -11,18 +11,19 @@ function mkdirp(dir) {
   fs.mkdirSync(dir);
 }
 
-function pickFile(dir) {
+function pickFile(dir, name) {
   try {
     mkdirp(dir);
     fs.accessSync(dir, fs.W_OK);
-    return path.join(dir, 'config.json');
+    return path.join(dir, name);
   } catch (e) {
     return null;
   }
 }
 
-function Store(dir) {
-  this.file = dir ? pickFile(dir) : null;
+/** Without a `dir`, the store is unavailable and loads and saves nothing. `name` defaults to config.json. */
+function Store(dir, name) {
+  this.file = dir ? pickFile(dir, name || 'config.json') : null;
 }
 
 Store.CONFIG_DIR = CONFIG_DIR;

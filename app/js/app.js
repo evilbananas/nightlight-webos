@@ -118,6 +118,68 @@
     return loc.latitude.toFixed(4) + ', ' + loc.longitude.toFixed(4);
   }
 
+  function formatKelvin(k) {
+    var name = k < 2000 ? 'candle' : k < 3500 ? 'warm' : k < 5000 ? 'neutral' : k <= 6500 ? 'daylight' : 'cool blue';
+    return k + ' K · ' + name;
+  }
+
+  function formatStepper(el, value) {
+    switch (el.getAttribute('data-kind')) {
+      case 'offset': return formatOffset(value, el.getAttribute('data-event'));
+      case 'kelvin': return formatKelvin(value);
+      case 'percent': return value + ' %';
+      default: return displayTime(value);
+    }
+  }
+
+  var PICTURE_MODES = {
+    off: { name: null, desc: 'Keeps your picture mode. In Vivid and Standard the color filter can only go as warm as LG\'s warmest Color Temperature setting.' },
+    eco: { name: 'Eco', desc: 'Switches to Eco at night, which is dimmer and saves power, and back to your picture mode in the morning.' },
+    cinema: { name: 'Cinema', desc: 'Switches to Cinema at night, which is warmer and darker than Vivid, and back to your picture mode in the morning.' },
+    expert1: { name: 'Expert 1', desc: 'Switches to Expert (bright room) at night. Expert modes allow the full color range, down to deep red.' },
+    expert2: { name: 'Expert 2', desc: 'Switches to Expert (dark room) at night. Expert modes allow the full color range, down to deep red.' }
+  };
+
+  /** Black-body color of `k` kelvin as [r, g, b] 0..255 (same curve fit as service/lib/picture.js). */
+  function kelvinRgb(k) {
+    var t = k / 100;
+    var r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+    var g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+    var b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
+    return [r, g, b].map(function (v) { return Math.round(Math.min(Math.max(v, 0), 255)); });
+  }
+
+  /** Roughly how the night picture looks: its color, darkened by the backlight setting. */
+  function nightColor(cfg) {
+    var rgb = cfg.colorEnabled ? kelvinRgb(cfg.nightKelvin) : [251, 247, 255];
+    // Damped, so a dim night still reads as warm light rather than mud.
+    var light = cfg.dimEnabled ? 0.6 + 0.4 * cfg.nightBacklight / 100 : 1;
+    return 'rgb(' + rgb.map(function (v) { return Math.round(v * light); }).join(',') + ')';
+  }
+
+  /** Shows the focused setting's explanation in the help strip, which is hidden while focus is outside the settings. */
+  function showHelp(el) {
+    var row = el;
+    while (row && !(row.classList && row.classList.contains('nav-row'))) row = row.parentNode;
+    var desc = row && row.querySelector('.desc');
+    $('help').classList.toggle('collapsed', !desc);
+    if (!desc) return;
+    $('helpLabel').textContent = row.querySelector('.label').textContent;
+    $('helpText').textContent = desc.textContent;
+  }
+
+  function usesPicture(cfg) {
+    return cfg.colorEnabled || cfg.dimEnabled || cfg.nightPictureMode !== 'off';
+  }
+
+  /** Whether night mode is on: the night level with a picture feature on, else Eye Comfort Mode. Null if unknown. */
+  function nightOn() {
+    if (!status) return null;
+    if (usesPicture(status.config) && status.night) return status.night.level > 0;
+    var tv = status.eyeComfort.tv;
+    return tv === true || tv === false ? tv : null;
+  }
+
   function hasCoords(loc) {
     return loc && loc.latitude !== null && loc.latitude !== undefined;
   }
@@ -143,10 +205,30 @@
       return;
     }
 
-    var tv = status.eyeComfort.tv;
-    stateEl.textContent = tv === true ? 'ON' : tv === false ? 'OFF' : '?';
-    stateEl.className = 'state' + (tv === true ? ' on' : tv === false ? ' off' : '');
-    $('toggleBtn').textContent = tv === true ? 'Turn off now' : 'Turn on now';
+    var cfg = status.config;
+    var night = status.night || {};
+    var on = nightOn();
+    // With a picture feature on, show the night level (it fades); otherwise Eye Comfort Mode itself.
+    if (usesPicture(cfg) && on !== null) {
+      var level = night.level || 0;
+      stateEl.textContent = level >= 1 ? 'ON' : level <= 0 ? 'OFF' : Math.round(level * 100) + ' %';
+    } else {
+      stateEl.textContent = on === true ? 'ON' : on === false ? 'OFF' : '?';
+    }
+    stateEl.className = 'state' + (on === true ? ' on' : on === false ? ' off' : '');
+    $('toggleBtn').textContent = on === true ? 'Turn off now' : 'Turn on now';
+
+    var showLight = cfg.colorEnabled || cfg.dimEnabled;
+    $('lightSection').classList.toggle('hidden', !showLight);
+    if (showLight) {
+      $('lightBar').style.background = 'linear-gradient(to right, #fbf7ff, ' + nightColor(cfg) + ')';
+      $('lightMarker').style.left = Math.round((night.level || 0) * 100) + '%';
+      var parts = [];
+      if (PICTURE_MODES[cfg.nightPictureMode] && PICTURE_MODES[cfg.nightPictureMode].name) parts.push(PICTURE_MODES[cfg.nightPictureMode].name);
+      if (cfg.colorEnabled) parts.push(cfg.nightKelvin + ' K');
+      if (cfg.dimEnabled) parts.push('Backlight ' + cfg.nightBacklight + ' %');
+      $('lightNight').textContent = 'Night · ' + parts.join(' · ');
+    }
 
     var sched = status.schedule || {};
     var ready = status.configAvailable !== false;
@@ -163,7 +245,7 @@
 
     if (!ready) setBadge(null);
     else if (!status.config.enabled) setBadge('Scheduler off', 'muted');
-    else if (la && la.ok && la.reason === 'manual' && tv === la.on) setBadge('Manual');
+    else if (night.manual) setBadge('Manual');
     else if (sched.ok) setBadge('Scheduled');
     else setBadge(null);
 
@@ -193,6 +275,10 @@
     }
     if (ready && status.config.enabled && sched.error) problem(sched.error, true);
     if (la && !la.ok) problem('Could not change Eye Comfort Mode: ' + la.error, true);
+    var sup = night.supported;
+    if (ready && sup && cfg.colorEnabled && !sup.color) problem('This TV doesn\'t expose color temperature or white balance settings, so the color filter can\'t work.', true);
+    if (ready && sup && cfg.dimEnabled && !sup.backlight) problem('This TV doesn\'t expose a backlight setting, so it can\'t be dimmed.', true);
+    if (night.error) problem(night.error, true);
     if (status.warning) problem(status.warning);
 
     if (problems.length) {
@@ -227,12 +313,20 @@
       });
     });
     qsa('.stepper').forEach(function (st) {
-      var key = st.getAttribute('data-key');
-      var text = st.getAttribute('data-kind') === 'offset'
-        ? formatOffset(draft[key], st.getAttribute('data-event'))
-        : displayTime(draft[key]);
-      st.querySelector('.value').textContent = text;
+      st.querySelector('.value').textContent = formatStepper(st, draft[st.getAttribute('data-key')]);
     });
+    qsa('.slider').forEach(function (sl) {
+      var value = draft[sl.getAttribute('data-key')];
+      var min = +sl.getAttribute('data-min');
+      var pct = (value - min) / (+sl.getAttribute('data-max') - min) * 100 + '%';
+      sl.querySelector('.value').textContent = formatStepper(sl, value);
+      sl.querySelector('.thumb').style.left = pct;
+      sl.querySelector('.fill').style.width = pct;
+    });
+    qsa('[data-show-if]').forEach(function (el) { el.classList.toggle('hidden', !draft[el.getAttribute('data-show-if')]); });
+    var pm = PICTURE_MODES[draft.nightPictureMode];
+    $('pictureModeDesc').textContent = pm ? pm.desc : '';
+    if (Nav.current()) showHelp(Nav.current());
     qsa('.mode-sun').forEach(function (el) { el.classList.toggle('hidden', draft.mode !== 'sun'); });
     qsa('.mode-manual').forEach(function (el) { el.classList.toggle('hidden', draft.mode !== 'manual'); });
     qsa('.loc-tv').forEach(function (el) { el.classList.toggle('hidden', draft.locationSource !== 'tv'); });
@@ -344,7 +438,8 @@
   // ---- controls ----------------------------------------------------------
 
   function parseValue(v) {
-    return v === 'true' ? true : v === 'false' ? false : v;
+    if (v === 'true' || v === 'false') return v === 'true';
+    return /^-?\d+(\.\d+)?$/.test(v) ? +v : v;
   }
 
   function adjust(el, dir) {
@@ -358,7 +453,7 @@
       return;
     }
     var step = +el.getAttribute('data-step') * (dir === 0 ? 1 : dir);
-    if (el.getAttribute('data-kind') === 'offset') {
+    if (el.getAttribute('data-kind') !== 'time') {
       var v = Math.min(Math.max(draft[key] + step, +el.getAttribute('data-min')), +el.getAttribute('data-max'));
       if (v !== draft[key]) setValue(key, v);
     } else {
@@ -373,7 +468,7 @@
 
   function setEyeComfort(enabled) {
     Luna.call(SERVICE + 'setEyeComfort', { enabled: enabled }, function (res) {
-      if (onStatus(res)) toast('Eye Comfort Mode turned ' + (enabled ? 'on' : 'off') + ' until the next scheduled change');
+      if (onStatus(res)) toast('Night mode turned ' + (enabled ? 'on' : 'off') + ' until the next scheduled change');
     });
   }
 
@@ -431,8 +526,21 @@
       adjust(el.parentNode, +el.getAttribute('data-dir'));
       return;
     }
+    var slider = el;
+    while (slider && !(slider.classList && slider.classList.contains('slider'))) slider = slider.parentNode;
+    if (slider && draft) {
+      // Magic Remote: jump to the clicked point on the track, snapped to the step.
+      var rect = slider.querySelector('.track').getBoundingClientRect();
+      var min = +slider.getAttribute('data-min');
+      var max = +slider.getAttribute('data-max');
+      var step = +slider.getAttribute('data-step');
+      var frac = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+      var v = Math.round((min + frac * (max - min)) / step) * step;
+      if (v !== draft[slider.getAttribute('data-key')]) setValue(slider.getAttribute('data-key'), v);
+      return;
+    }
     switch (el.getAttribute('data-action')) {
-      case 'toggle': if (status) setEyeComfort(status.eyeComfort.tv !== true); break;
+      case 'toggle': if (status) setEyeComfort(nightOn() !== true); break;
       case 'save-coords': saveCoords(); break;
     }
   }
@@ -447,7 +555,7 @@
     else startPolling();
   }
 
-  Nav.init({ adjust: adjust, back: exitApp });
+  Nav.init({ adjust: adjust, back: exitApp, focus: showHelp });
   document.addEventListener('click', onClick, false);
   document.addEventListener('visibilitychange', onVisibility, false);
   document.addEventListener('webkitvisibilitychange', onVisibility, false);
