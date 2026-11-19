@@ -14,14 +14,13 @@
         <polygon points="23,5 41,5 50,29 14,29" fill="#ffb347" stroke="#ffb347" stroke-width="4" stroke-linejoin="round"/>
       </svg>
       <h1>NightLight</h1>
-      <span class="sub">Eye Comfort scheduler</span>
       <span id="version" class="version"></span>
     </header>
 
     <main>
       <section class="card status-card">
         <div class="card-top">
-          <span class="caption">Eye Comfort Mode</span>
+          <span class="caption">Night mode</span>
           <span id="badge" class="badge hidden"></span>
         </div>
         <div class="state-row">
@@ -29,6 +28,16 @@
           <div class="next-box">
             <div class="caption">Next change</div>
             <div id="next" class="next">Connecting to service…</div>
+          </div>
+        </div>
+
+        <div id="lightSection" class="section light hidden">
+          <div class="light-bar" id="lightBar">
+            <div class="light-marker" id="lightMarker"></div>
+          </div>
+          <div class="light-legend">
+            <span>Day</span>
+            <span id="lightNight" class="light-night"></span>
           </div>
         </div>
 
@@ -58,71 +67,131 @@
 
       <section class="card settings-card loading" id="settings">
         <p class="loading-text">Loading settings…</p>
+        <div class="settings-scroll" id="settingsScroll">
         <h2>Schedule</h2>
         <div class="nav-row setting">
-          <span class="label">Scheduler</span>
+          <div class="text"><div class="label">Scheduler</div><div class="desc">Turns night mode on and off by itself.</div></div>
           <div class="focusable seg" data-key="enabled">
             <span data-value="true">On</span><span data-value="false">Off</span>
           </div>
         </div>
         <div class="nav-row setting">
-          <span class="label">Mode</span>
+          <div class="text"><div class="label">Mode</div><div class="desc">Follow sunset and sunrise, or pick fixed times.</div></div>
           <div class="focusable seg" data-key="mode">
             <span data-value="sun">Sunset to sunrise</span><span data-value="manual">Custom times</span>
           </div>
         </div>
         <div class="nav-row setting mode-sun">
-          <span class="label">Turn on</span>
+          <div class="text"><div class="label">Turn on</div><div class="desc">Start earlier or later than sunset.</div></div>
           <div class="focusable stepper" data-key="sunsetOffset" data-kind="offset" data-event="sunset" data-step="5" data-min="-240" data-max="240">
-            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+            <span class="arrow prev" data-dir="-1"></span><span class="value"></span><span class="arrow next" data-dir="1"></span>
           </div>
         </div>
         <div class="nav-row setting mode-sun">
-          <span class="label">Turn off</span>
+          <div class="text"><div class="label">Turn off</div><div class="desc">End earlier or later than sunrise.</div></div>
           <div class="focusable stepper" data-key="sunriseOffset" data-kind="offset" data-event="sunrise" data-step="5" data-min="-240" data-max="240">
-            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+            <span class="arrow prev" data-dir="-1"></span><span class="value"></span><span class="arrow next" data-dir="1"></span>
           </div>
         </div>
         <div class="nav-row setting mode-manual">
-          <span class="label">Turn on at</span>
+          <div class="text"><div class="label">Turn on at</div><div class="desc">When night mode starts every day.</div></div>
           <div class="focusable stepper" data-key="manualStart" data-kind="time" data-step="15">
-            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+            <span class="arrow prev" data-dir="-1"></span><span class="value"></span><span class="arrow next" data-dir="1"></span>
           </div>
         </div>
         <div class="nav-row setting mode-manual">
-          <span class="label">Turn off at</span>
+          <div class="text"><div class="label">Turn off at</div><div class="desc">When night mode ends every day.</div></div>
           <div class="focusable stepper" data-key="manualEnd" data-kind="time" data-step="15">
-            <span class="arrow" data-dir="-1">‹</span><span class="value"></span><span class="arrow" data-dir="1">›</span>
+            <span class="arrow prev" data-dir="-1"></span><span class="value"></span><span class="arrow next" data-dir="1"></span>
+          </div>
+        </div>
+
+        <h2>At night</h2>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Eye Comfort Mode</div><div class="desc">LG's own blue light filter. On some TVs it locks the color temperature.</div></div>
+          <div class="focusable seg" data-key="eyeComfort">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Picture mode</div><div class="desc" id="pictureModeDesc"></div></div>
+          <div class="focusable seg" data-key="nightPictureMode">
+            <span data-value="off">Keep</span><span data-value="eco">Eco</span><span data-value="cinema">Cinema</span><span data-value="expert1">Expert 1</span><span data-value="expert2">Expert 2</span>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Color filter</div><div class="desc">Shifts the picture toward warmer light.</div></div>
+          <div class="focusable seg" data-key="colorEnabled">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        <div class="nav-row setting" data-show-if="colorEnabled">
+          <div class="text"><div class="label">Color</div><div class="desc">Lower is warmer: 2700 K is a light bulb, below 2000 K candle light.</div></div>
+          <div class="focusable slider kelvin" data-key="nightKelvin" data-kind="kelvin" data-step="100" data-min="1000" data-max="10000">
+            <div class="slider-value value"></div>
+            <div class="track"><div class="fill"></div><div class="thumb"></div></div>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Dim backlight</div><div class="desc">Lowers the backlight. Does the most on LCD TVs.</div></div>
+          <div class="focusable seg" data-key="dimEnabled">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        <div class="nav-row setting" data-show-if="dimEnabled">
+          <div class="text"><div class="label">Backlight</div><div class="desc">Level at night. Your daytime level comes back in the morning.</div></div>
+          <div class="focusable slider" data-key="nightBacklight" data-kind="percent" data-step="5" data-min="0" data-max="100">
+            <div class="slider-value value"></div>
+            <div class="track"><div class="fill"></div><div class="thumb"></div></div>
+          </div>
+        </div>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Transition</div><div class="desc">How long the change into and out of night mode takes.</div></div>
+          <div class="focusable seg" data-key="fadeMinutes">
+            <span data-value="0">Instant</span><span data-value="0.25">15 s</span><span data-value="1">1 min</span><span data-value="5">5 min</span><span data-value="30">30 min</span>
           </div>
         </div>
 
         <h2>Location</h2>
         <div class="nav-row setting">
-          <span class="label">Source</span>
+          <div class="text"><div class="label">Source</div><div class="desc">Where sunset and sunrise are calculated for.</div></div>
           <div class="focusable seg" data-key="locationSource">
             <span data-value="tv">TV timezone</span><span data-value="manual">Manual</span>
           </div>
         </div>
         <div class="nav-row setting loc-tv">
-          <span class="label">From timezone</span>
+          <div class="text"><div class="label">From timezone</div><div class="desc">The main city of the TV's timezone.</div></div>
           <div class="value-stack">
             <div id="tzLocationName" class="value-text">—</div>
             <div id="tzLocationDetail" class="detail"></div>
           </div>
         </div>
         <div class="nav-row setting coords loc-manual">
-          <span class="label">Coordinates</span>
-          <input class="focusable input" id="lat" type="text" placeholder="Latitude" maxlength="12">
-          <input class="focusable input" id="lon" type="text" placeholder="Longitude" maxlength="12">
-          <button class="focusable btn" data-action="save-coords">Use</button>
+          <div class="text"><div class="label">Coordinates</div><div class="desc">Latitude and longitude, then press Use.</div></div>
+          <div class="coord-fields">
+            <input class="focusable input" id="lat" type="text" placeholder="Latitude" maxlength="12">
+            <input class="focusable input" id="lon" type="text" placeholder="Longitude" maxlength="12">
+            <button class="focusable btn" data-action="save-coords">Use</button>
+          </div>
         </div>
 
         <h2>System</h2>
         <div class="nav-row setting">
-          <span class="label">Start at boot</span>
+          <div class="text"><div class="label">Start at boot</div><div class="desc">Keeps the schedule running after a restart, without opening the app.</div></div>
           <div class="focusable seg" data-key="autostart">
             <span data-value="true">On</span><span data-value="false">Off</span>
           </div>
+        </div>
+        <div class="nav-row setting">
+          <div class="text"><div class="label">Notifications</div><div class="desc">Shows a message on the TV when night mode turns on or off.</div></div>
+          <div class="focusable seg" data-key="notify">
+            <span data-value="true">On</span><span data-value="false">Off</span>
+          </div>
+        </div>
+        </div>
+        <div class="help collapsed" id="help">
+          <div class="help-label" id="helpLabel"></div>
+          <div class="help-text" id="helpText"></div>
         </div>
       </section>
     </main>
@@ -134,7 +203,10 @@
         <span id="toast" class="toast"></span>
       </div>
       <div class="hints">
-        <span><b>▲▼</b> Navigate</span><span><b>◀▶</b> Change</span><span><b>OK</b> Select</span><span><b>BACK</b> Exit</span>
+        <span><i class="key"><i class="chev up"></i><i class="chev down"></i></i>Navigate</span>
+        <span><i class="key"><i class="chev left"></i><i class="chev right"></i></i>Change</span>
+        <span><i class="key">OK</i>Select</span>
+        <span><i class="key">BACK</i>Exit</span>
       </div>
     </footer>
   </div>

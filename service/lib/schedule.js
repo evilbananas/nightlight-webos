@@ -3,8 +3,11 @@ var sun = require('./sun');
 
 var MIN_MS = 60000;
 var DAY_MS = 86400000;
-// Matches data-min/data-max on the offset steppers in app/index.html.
+// These match data-min/data-max on the steppers in app/index.html.
 var MAX_OFFSET = 240;
+var MIN_KELVIN = 1000;
+var MAX_KELVIN = 10000;
+var MAX_FADE = 180;
 
 var DEFAULT_CONFIG = {
   enabled: true,
@@ -15,8 +18,19 @@ var DEFAULT_CONFIG = {
   manualEnd: '07:00',
   locationSource: 'tv', // 'tv' (coordinates of the TV's timezone) | 'manual'
   location: null, // manual coordinates: { latitude, longitude, label }
-  autostart: true
+  autostart: true,
+  eyeComfort: true, // switch LG's Eye Comfort Mode at night
+  colorEnabled: false, // shift the white balance to nightKelvin at night
+  nightKelvin: 2700,
+  dimEnabled: false, // lower the backlight to nightBacklight at night
+  nightBacklight: 40, // 0..100
+  fadeMinutes: 0, // how long the change to and from night takes; 0 = instant
+  nightPictureMode: 'off', // picture mode to switch to at night (SDR only), or 'off'
+  notify: false // show a TV notification when night mode turns on or off
 };
+
+// Matches the options in app/index.html.
+var NIGHT_PICTURE_MODES = ['off', 'eco', 'cinema', 'expert1', 'expert2'];
 
 function parseHHMM(value) {
   var m = /^(\d{1,2}):(\d{2})$/.exec(String(value));
@@ -66,7 +80,35 @@ function validateConfig(c) {
     if (!isNum(loc.latitude) || loc.latitude < -90 || loc.latitude > 90) return 'latitude must be between -90 and 90';
     if (!isNum(loc.longitude) || loc.longitude < -180 || loc.longitude > 180) return 'longitude must be between -180 and 180';
   }
+  if (!isNum(c.nightKelvin) || c.nightKelvin < MIN_KELVIN || c.nightKelvin > MAX_KELVIN) return 'nightKelvin must be between ' + MIN_KELVIN + ' and ' + MAX_KELVIN;
+  if (!isNum(c.nightBacklight) || c.nightBacklight < 0 || c.nightBacklight > 100) return 'nightBacklight must be between 0 and 100';
+  if (!isNum(c.fadeMinutes) || c.fadeMinutes < 0 || c.fadeMinutes > MAX_FADE) return 'fadeMinutes must be between 0 and ' + MAX_FADE;
+  if (NIGHT_PICTURE_MODES.indexOf(c.nightPictureMode) === -1) return 'nightPictureMode must be one of ' + NIGHT_PICTURE_MODES.join(', ');
   return null;
+}
+
+function ramp(from, to, elapsedMs, fadeMs) {
+  if (fadeMs <= 0) return to;
+  var step = elapsedMs / fadeMs;
+  return from < to ? Math.min(to, from + step) : Math.max(to, from - step);
+}
+
+/**
+ * Night level at `now`: 0 = day, 1 = full night. It moves toward each event's state at a
+ * constant rate and gets there `fadeMs` after the event, so a fade that the next event cuts
+ * short turns around from wherever it got to.
+ */
+function levelAt(events, now, fadeMs) {
+  if (!events.length) return 0;
+  var level = events[0].on ? 0 : 1;
+  var target = level;
+  var t = events[0].at;
+  for (var i = 0; i < events.length && events[i].at <= now; i++) {
+    level = ramp(level, target, events[i].at - t, fadeMs);
+    t = events[i].at;
+    target = events[i].on ? 1 : 0;
+  }
+  return ramp(level, target, now - t, fadeMs);
 }
 
 /**
@@ -151,7 +193,12 @@ function evaluate(config, location, now, offsetMin) {
     if (events[j].at > now && events[j].on !== desired) { next = events[j]; break; }
   }
 
-  var result = { ok: true, desired: desired, today: { offset: offsetMin } };
+  var result = {
+    ok: true,
+    desired: desired,
+    level: levelAt(events, now, config.fadeMinutes * MIN_MS),
+    today: { offset: offsetMin }
+  };
   if (next) {
     result.next = {
       on: next.on,

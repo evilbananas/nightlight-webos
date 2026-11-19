@@ -8,10 +8,13 @@ window.MockLuna = (function () {
     autostartInstalled: false,
     config: {
       enabled: true, mode: 'sun', sunsetOffset: 0, sunriseOffset: 0,
-      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv', location: null, autostart: true
+      manualStart: '21:00', manualEnd: '07:00', locationSource: 'tv', location: null, autostart: true,
+      eyeComfort: true, colorEnabled: false, nightKelvin: 2700, dimEnabled: false, nightBacklight: 40,
+      fadeMinutes: 0, nightPictureMode: 'off', notify: false
     },
     clock: { offset: 60, timezone: 'Europe/Copenhagen', local: '13:15' },
     eyeComfort: { tv: false, desired: false, lastApply: null },
+    night: { level: 0, manual: false, pictureMode: 'default/sdr/vivid', supported: { color: true, backlight: true }, error: null },
     schedule: {
       ok: true, desired: false,
       next: { on: true, local: '16:09', inMinutes: 174 },
@@ -42,8 +45,10 @@ window.MockLuna = (function () {
         for (var k in params.config) state.config[k] = params.config[k];
         state.autostartInstalled = state.elevated && state.config.autostart;
       } else if (method === 'setEyeComfort') {
-        state.eyeComfort.tv = !!params.enabled;
+        state.eyeComfort.tv = !!params.enabled && state.config.eyeComfort;
         state.eyeComfort.lastApply = { on: !!params.enabled, reason: 'manual', at: Date.now(), ok: true, error: null };
+        state.night.level = params.enabled ? 1 : 0;
+        state.night.manual = true;
       } else if (method === 'exec') {
         state.elevated = true;
         return cb({ returnValue: true, stdoutString: 'elevated' });

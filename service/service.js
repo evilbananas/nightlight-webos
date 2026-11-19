@@ -2,13 +2,16 @@
 var Service = require('webos-service');
 var Controller = require('./lib/controller');
 var Store = require('./lib/store');
+var picture = require('./lib/picture');
 var tzlocation = require('./lib/tzlocation');
 var places = require('./lib/places');
 var autostart = require('./lib/autostart');
 var pkg = require('./package.json');
 
 var SERVICE_ID = pkg.name;
-var TICK_MS = 30000;
+var APP_ID = SERVICE_ID.replace(/\.service$/, '');
+// Short enough for smooth fades; nothing is written while the values stay the same.
+var TICK_MS = 10000;
 
 var service = new Service(SERVICE_ID);
 
@@ -30,13 +33,23 @@ var luna = {
   }
 };
 
+function notify(message) {
+  luna.call('luna://com.webos.notification/createToast', { sourceId: APP_ID, message: message }, function (err) {
+    if (err) log('Notification failed: ' + err.message);
+  });
+}
+
+// Without root the service runs in a jail with its own empty /home/root, which would
+// pass the store's checks but hide the real config.
+var configDir = isRoot() ? Store.CONFIG_DIR : null;
+
 var controller = new Controller({
   luna: luna,
-  // Without root the service runs in a jail with its own empty /home/root, which would
-  // pass the store's checks but hide the real config.
-  store: new Store(isRoot() ? Store.CONFIG_DIR : null),
+  store: new Store(configDir),
+  stateStore: new Store(configDir, 'state.json'),
   resolveTimezone: function (tz) { return tzlocation.resolve(tz); },
   nameLocation: function (lat, lon) { return places.nearest(lat, lon); },
+  notify: notify,
   log: log
 });
 
@@ -74,6 +87,15 @@ clockSub.on('response', function (msg) {
   if (p.returnValue !== false) controller.setClock(p.offset, p.timezone);
 });
 
+// Each input, dynamic range and picture mode has its own settings, so night values are
+// re-applied when they change.
+var pictureSub = service.subscribe('luna://com.webos.settingsservice/getSystemSettings', {
+  category: 'picture', keys: ['pictureMode'], subscribe: true
+});
+pictureSub.on('response', function (msg) {
+  controller.setPictureMode(picture.settingsKey(msg.payload));
+});
+
 service.register('start', function (message) {
   message.respond({ returnValue: true, running: true, elevated: isRoot() });
 });
@@ -96,7 +118,7 @@ service.register('setConfig', function (message) {
 
 service.register('setEyeComfort', function (message) {
   var enabled = !!(message.payload && message.payload.enabled);
-  controller.apply(enabled, 'manual', function (err) {
+  controller.setManual(enabled, function (err) {
     if (err) return fail(message, err.message);
     message.respond(fullStatus());
   });
@@ -111,4 +133,12 @@ service.register('restart', function (message) {
 log('Starting v' + pkg.version + (isRoot() ? ' (root)' : ' (not elevated)'));
 syncAutostart();
 controller.start();
-setInterval(function () { controller.tick(); }, TICK_MS);
+
+// Ticks every TICK_MS, and right at the next scheduled change so it isn't up to a tick late.
+function loop() {
+  controller.tick();
+  var next = controller.lastEval && controller.lastEval.next;
+  var untilNext = next ? next.at - Date.now() + 50 : Infinity;
+  setTimeout(loop, Math.max(Math.min(TICK_MS, untilNext), 50));
+}
+setTimeout(loop, TICK_MS);
