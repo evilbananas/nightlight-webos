@@ -9,7 +9,7 @@ switch Location to Manual in the app and enter your latitude and longitude for b
 of the nearest town next to them. It looks this up on the TV in a list of places from [GeoNames](https://www.geonames.org/)
 (CC BY 4.0), so the coordinates aren't sent anywhere.
 
-![NightLight app showing Eye Comfort Mode status and schedule settings](docs/screenshot.png)
+![NightLight app with night mode on, showing the color, backlight and transition settings for the night](docs/screenshot.png)
 
 ## At night
 
@@ -61,7 +61,8 @@ NightLight's mapping was calibrated by eye on one TV and can look a bit differen
 
 - A rooted LG webOS TV with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel) installed. Root
   lets the scheduler start by itself when the TV boots.
-- Tested on webOS 10.3.1.
+- Tested on webOS 10.3.1. The night picture features were tested on webOS 4.4.3 (LG 55UK7550LLA from 2018,
+  firmware 05.50.70).
 
 ## Installing
 
