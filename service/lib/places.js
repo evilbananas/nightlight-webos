@@ -14,15 +14,22 @@ var KM_PER_SQRT_POP = 0.005;
 /** `text` has lines of "name\tCC\tlat\tlon\tpopulation". */
 function nearestIn(text, latitude, longitude) {
   var cosLat = Math.cos(latitude * Math.PI / 180);
+  var maxDLat = MAX_KM / KM_PER_DEG;
   var best = null;
   var bestScore = Infinity;
   // Walks the text instead of splitting it into an array of ~230k lines.
   for (var start = 0, end; start < text.length; start = end + 1) {
     end = text.indexOf('\n', start);
     if (end === -1) end = text.length;
+    // Most lines are too far north or south. Reading the latitude before splitting the line
+    // makes a lookup about 3.5x faster on the TV.
+    var t2 = text.indexOf('\t', text.indexOf('\t', start) + 1);
+    if (t2 === -1 || t2 > end) continue;
+    var lat = parseFloat(text.substring(t2 + 1, end));
+    if (!(Math.abs(lat - latitude) <= maxDLat)) continue;
     var c = text.substring(start, end).split('\t');
     if (c.length < 4) continue;
-    var dLat = +c[2] - latitude;
+    var dLat = lat - latitude;
     var dLon = Math.abs(+c[3] - longitude);
     if (dLon > 180) dLon = 360 - dLon;
     dLon *= cosLat;
